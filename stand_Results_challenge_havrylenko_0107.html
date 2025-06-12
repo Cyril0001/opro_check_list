@@ -85,28 +85,37 @@
       margin-top: 4px;
       line-height: 1.2;
     }
-    .scroll-wrapper {
+    .table-wrapper {
       overflow-x: auto;
-      background: white;
     }
     table {
-      width: max-content;
       border-collapse: collapse;
       margin-top: 10px;
       font-size: 12px;
       background-color: white;
+      table-layout: fixed;
+      min-width: max-content;
     }
     th, td {
       padding: 6px;
       text-align: center;
       border: 1px solid #ccc;
+      min-width: 50px;
+      white-space: nowrap;
     }
     th {
       background-color: #ff6005;
       color: white;
+      cursor: pointer;
     }
     tr:nth-child(even) {
       background-color: #f2f2f2;
+    }
+    td:first-child, th:first-child {
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 1;
     }
   </style>
 </head>
@@ -126,31 +135,57 @@
         <div class="timestamp">по состоянию на<br>2025-07-01 14:30</div>
       </div>
     </div>
-    <div class="scroll-wrapper">
-      <table>
+    <div class="table-wrapper">
+      <table id="intermediateTable">
         <thead>
           <tr>
-            <th>Ник</th>
-            <th>1</th>
-            <th>2</th>
-            <th>3</th>
-            <th>4</th>
-            <th>5</th>
-            <th>6</th>
-            <th>7</th>
-            <th>8</th>
-            <th>9</th>
-            <th>10</th>
+            <th onclick="sortTable(0)">Ник</th>
+            <th onclick="sortTable(1)">1</th>
+            <th onclick="sortTable(2)">2</th>
+            <th onclick="sortTable(3)">3</th>
+            <th onclick="sortTable(4)">4</th>
+            <th onclick="sortTable(5)">5</th>
+            <th onclick="sortTable(6)">6</th>
+            <th onclick="sortTable(7)">7</th>
+            <th onclick="sortTable(8)">8</th>
+            <th onclick="sortTable(9)">9</th>
+            <th onclick="sortTable(10)">10</th>
           </tr>
         </thead>
-        <tbody>
-          <tr><td>Васисуалий_Ориентировщиков</td><td>00:35</td><td>00:37</td><td>00:40</td><td>00:36</td><td>00:41</td><td>00:39</td><td>00:38</td><td>00:42</td><td>00:36</td><td>00:35</td></tr>
-          <tr><td>runner_2</td><td>00:32</td><td>00:36</td><td>00:38</td><td>00:35</td><td>00:39</td><td>00:37</td><td>00:40</td><td>00:41</td><td></td><td></td></tr>
-          <tr><td>runner_3</td><td>00:36</td><td>00:38</td><td>00:37</td><td>00:39</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>runner_4</td><td>00:31</td><td>00:34</td><td>00:33</td><td>00:36</td><td>00:37</td><td>00:35</td><td></td><td></td><td></td><td></td></tr>
-        </tbody>
+        <tbody id="intermediateBody"></tbody>
       </table>
     </div>
   </div>
+  <script>
+    const table = document.getElementById("intermediateTable");
+    const tbody = document.getElementById("intermediateBody");
+    const runners = Array.from({ length: 50 }, (_, i) => {
+      const name = `runner_${i + 1}`;
+      const times = Array.from({ length: 10 }, (_, j) => {
+        return Math.random() > 0.7 ? '' : `${String(30 + Math.floor(Math.random() * 20)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+      });
+      return { name, times };
+    });
+
+    runners.forEach(r => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${r.name}</td>` + r.times.map(t => `<td>${t}</td>`).join('');
+      tbody.appendChild(row);
+    });
+
+    function sortTable(n) {
+      const rows = Array.from(tbody.rows);
+      let asc = table.dataset.sortAsc === 'true';
+      rows.sort((a, b) => {
+        let x = a.cells[n].innerText;
+        let y = b.cells[n].innerText;
+        if (x === '') return 1;
+        if (y === '') return -1;
+        return asc ? x.localeCompare(y) : y.localeCompare(x);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      table.dataset.sortAsc = !asc;
+    }
+  </script>
 </body>
 </html>
