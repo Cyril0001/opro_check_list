@@ -70,9 +70,6 @@
       color: #ff6005;
       font-size: 18px;
       font-weight: 400;
-      padding: 10px;
-      flex-grow: 1;
-      text-align: center;
     }
     .results-label-container {
       display: flex;
@@ -86,9 +83,7 @@
     }
     .timestamp {
       font-size: 12px;
-      text-align: center;
-      margin: -10px 0 10px;
-      margin-left: 10px;
+      text-align: left ;
       color: #666;
     }
     .table-wrapper {
@@ -97,25 +92,32 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 0px;
       font-size: 12px;
-      min-width: 400px;
+      min-width: 360px;
     }
     th, td {
-      padding: 6px;
-      text-align: center;
+      padding: 4px;
       border: 1px solid #ccc;
     }
     th {
       background-color: #ff6005;
       color: white;
       cursor: pointer;
+      text-align: center;
+    }
+    td {
+      text-align: center;
+    }
+    td:nth-child(3) {
+      text-align: left;
     }
     tr:nth-child(even) {
       background-color: #f2f2f2;
     }
-    td:nth-child(4) { width: 80px; }
-    td:nth-child(6) { width: 36px; }
+    td:nth-child(4) { width: 32px; }
+    td:nth-child(5) { width: 70px; }
+    td:nth-child(6) { width: 54px; }
   </style>
   <script>
     let sortDir = Array(6).fill(true);
@@ -124,11 +126,11 @@
       const tbody = table.tBodies[0];
       const rows = Array.from(tbody.rows);
       const asc = sortDir[n];
-      const actualIndex = n === 5 ? 3 : n;
+      const actualIndex = n === 4 ? 3 : n === 3 ? 5 : n;
       rows.sort((a, b) => {
         let x = a.cells[actualIndex].innerText;
         let y = b.cells[actualIndex].innerText;
-        if (actualIndex === 3) {
+        if (actualIndex === 5) {
           return asc ? new Date('2025-' + x) - new Date('2025-' + y) : new Date('2025-' + y) - new Date('2025-' + x);
         }
         if (!isNaN(x) && !isNaN(y)) {
@@ -156,6 +158,7 @@
             <div class="results-label">РЕЗУЛЬТАТЫ</div>
             <div class="timestamp">челлендж завершен<br>2025-07-01 14:30</div>
         </div>
+    </div>
     <div class="table-wrapper">
       <table id="resultsTable">
         <thead>
@@ -163,15 +166,28 @@
             <th onclick="sortTable(0)">Место</th>
             <th onclick="sortTable(1)">Баллы</th>
             <th onclick="sortTable(2)">Ник</th>
-            <th onclick="sortTable(3)">Дата</th>
-            <th onclick="sortTable(4)">Время</th>
-            <th onclick="sortTable(5)">Шансы</th>
+            <th onclick="sortTable(3)">Шансы</th>
+            <th onclick="sortTable(4)">Дата</th>
+            <th onclick="sortTable(5)">Время</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
     <script>
+      const scandinavianNames = [
+        "Lars Nilsen", "Erik Johansen", "Kari Olsen", "Anna Berg", "Mats Andersson",
+        "Nina Haugen", "Sven Lindgren", "Greta Eklund", "Ole Pedersen", "Ingrid Dahl",
+        "Torbjörn Holm", "Helga Knutsen", "Jonas Strand", "Maria Lund", "Henrik Larsen",
+        "Elin Sørensen", "Magnus Björk", "Liv Hansen", "Jens Sandvik", "Tuva Blom",
+        "Kasper Aas", "Maja Hovland", "Stian Røed", "Ida Nyström", "Kristian Moe",
+        "Tiril Foss", "Eirik Sten", "Anja Myhre", "Emil Karlsen", "Sofia Norrman",
+        "Martin Sunde", "Camilla Vang", "Fredrik Thorsen", "Selma Ruud", "Andreas Vik",
+        "Malin Berge", "Thomas Nygaard", "Ronja Åkesson", "Leif Arnesen", "Nora Svendsen",
+        "Daniel Hauger", "Vilde Lie", "Oskar Eskilsson", "Signe Thune", "Robin Fagerström",
+        "Julie Hald", "Vegar Horn", "Emilia Eide", "Runar Gran", "Ella Knudsen"
+      ];
+
       const toSeconds = t => t.split(':').reduce((s, v, i) => s + (+v) * Math.pow(60, 2 - i), 0);
       const toDate = d => new Date(`2025-${d.split(' ')[0]}T${d.split(' ')[1]}`);
       const getRandomDateTime = (baseDay, index) => {
@@ -190,10 +206,10 @@
         const rawTime = `${String(1 + Math.floor(Math.random() * 3)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
         return {
           score: 10 + Math.floor(Math.random() * 40),
-          name: `runner_${i + 1}`,
+          name: scandinavianNames[i % scandinavianNames.length],
+          bonus: getBonusChances(completionOrder + 1),
           date,
-          time: rawTime,
-          bonus: getBonusChances(completionOrder + 1)
+          time: rawTime
         };
       });
       runners.sort((a, b) => {
@@ -209,9 +225,9 @@
           <td>${index + 1}</td>
           <td>${row.score}</td>
           <td>${row.name}</td>
+          <td>${row.bonus}</td>
           <td>${row.date}</td>
           <td>${row.time}</td>
-          <td>${row.bonus}</td>
         </tr>`;
       });
     </script>
