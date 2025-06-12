@@ -74,11 +74,32 @@
       flex-grow: 1;
       text-align: center;
     }
+    .results-label-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      flex-grow: 1;
+      margin-left: 10px;
+      padding-top: 0px;
+      margin-top: -4px;
+    }
+    .timestamp {
+      font-size: 12px;
+      text-align: center;
+      margin: -10px 0 10px;
+      margin-left: 10px;
+      color: #666;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
       font-size: 12px;
+      min-width: 400px;
     }
     th, td {
       padding: 6px;
@@ -131,21 +152,25 @@
         <div class="label-box">OPRO Challenge&nbsp;&nbsp;&nbsp;</div>
         <div class="title-box">Havrylenko #1&nbsp;&nbsp;&nbsp;</div>
       </div>
-      <div class="results-label">РЕЗУЛЬТАТЫ</div>
+        <div class="results-label-container">
+            <div class="results-label">РЕЗУЛЬТАТЫ</div>
+            <div class="timestamp">челлендж завершен<br>2025-07-01 14:30</div>
+        </div>
+    <div class="table-wrapper">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Место</th>
+            <th onclick="sortTable(1)">Баллы</th>
+            <th onclick="sortTable(2)">Ник</th>
+            <th onclick="sortTable(3)">Дата</th>
+            <th onclick="sortTable(4)">Время</th>
+            <th onclick="sortTable(5)">Шансы</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
-    <table id="resultsTable">
-      <thead>
-        <tr>
-          <th onclick="sortTable(0)">Место</th>
-          <th onclick="sortTable(1)">Баллы</th>
-          <th onclick="sortTable(2)">Ник</th>
-          <th onclick="sortTable(3)">Дата</th>
-          <th onclick="sortTable(4)">Время</th>
-          <th onclick="sortTable(5)">Шансы</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
     <script>
       const toSeconds = t => t.split(':').reduce((s, v, i) => s + (+v) * Math.pow(60, 2 - i), 0);
       const toDate = d => new Date(`2025-${d.split(' ')[0]}T${d.split(' ')[1]}`);
