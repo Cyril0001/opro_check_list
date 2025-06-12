@@ -120,27 +120,45 @@
     td:nth-child(6) { width: 54px; }
   </style>
   <script>
-    let sortDir = Array(6).fill(true);
-    function sortTable(n) {
-      const table = document.getElementById("resultsTable");
-      const tbody = table.tBodies[0];
-      const rows = Array.from(tbody.rows);
-      const asc = sortDir[n];
-      const actualIndex = n === 4 ? 3 : n === 3 ? 5 : n;
-      rows.sort((a, b) => {
-        let x = a.cells[actualIndex].innerText;
-        let y = b.cells[actualIndex].innerText;
-        if (actualIndex === 5) {
-          return asc ? new Date('2025-' + x) - new Date('2025-' + y) : new Date('2025-' + y) - new Date('2025-' + x);
-        }
-        if (!isNaN(x) && !isNaN(y)) {
-          return asc ? x - y : y - x;
-        }
-        return asc ? x.localeCompare(y) : y.localeCompare(x);
-      });
-      rows.forEach(row => tbody.appendChild(row));
-      sortDir[n] = !asc;
+let sortDir = Array(6).fill(true);
+
+function sortTable(n) {
+  const table = document.getElementById("resultsTable");
+  const tbody = table.tBodies[0];
+  const rows = Array.from(tbody.rows);
+  const asc = sortDir[n];
+
+  rows.sort((a, b) => {
+    // для столбца Date (n===4) парсим дату+время
+    if (n === 4) {
+      // текст в формате "MM-DD HH:MM"
+      const pa = parseDateTime(a.cells[4].innerText);
+      const pb = parseDateTime(b.cells[4].innerText);
+      return asc ? pa - pb : pb - pa;
     }
+    // простой числовой или строковый выпад
+    const xa = a.cells[n].innerText.trim();
+    const xb = b.cells[n].innerText.trim();
+    if (!isNaN(xa) && !isNaN(xb)) {
+      return asc ? xa - xb : xb - xa;
+    }
+    return asc ? xa.localeCompare(xb) : xb.localeCompare(xa);
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+  sortDir[n] = !asc;
+}
+
+// вспомогательная функция для разбора "MM-DD HH:MM"
+function parseDateTime(str) {
+  // вставляем год (любой опорный, например 2025)
+  // и приводим к ISO-подстроке
+  // из "06-12 14:30" → "2025-06-12T14:30:00"
+  const [md, hm] = str.split(' ');
+  const [MM, DD] = md.split('-').map(x=>x.padStart(2,'0'));
+  return new Date(`2025-${MM}-${DD}T${hm}:00`).getTime();
+}
+
   </script>
 </head>
 <body>
