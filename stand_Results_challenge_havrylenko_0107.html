@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OPRO Challenge Results</title>
+  <title>OPRO Challenge Intermediate</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
   <style>
     body {
@@ -31,12 +31,12 @@
     }
     .spacer {
       height: 0px;
-      background-color: white;
+      background-color: #f6f6f6;
     }
     .title-flex {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       margin: 20px 0;
     }
@@ -66,14 +66,6 @@
       padding: 4px 30px;
       white-space: nowrap;
     }
-    .results-label {
-      color: #ff6005;
-      font-size: 20px;
-      font-weight: bold;
-      padding: 10px;
-      flex-grow: 1;
-      text-align: center;
-    }
     .results-label-container {
       display: flex;
       flex-direction: column;
@@ -84,27 +76,34 @@
       padding-top: 0px;
       margin-top: -4px;
     }
+    .results-label {
+      color: #ff6005;
+      font-size: 20px;
+      font-weight: 400;
+    }
     .timestamp {
       font-size: 12px;
-      text-align: center;
-      margin: -10px 0 10px;
-      margin-left: 10px;
       color: #666;
+      line-height: 1.2;
+      
     }
     .table-wrapper {
       overflow-x: auto;
     }
     table {
-      width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 4px;
       font-size: 12px;
-      min-width: 400px;
+      background-color: white;
+      table-layout: fixed;
+      min-width: max-content;
     }
     th, td {
       padding: 6px;
       text-align: center;
       border: 1px solid #ccc;
+      min-width: 50px;
+      white-space: nowrap;
     }
     th {
       background-color: #ff6005;
@@ -114,32 +113,15 @@
     tr:nth-child(even) {
       background-color: #f2f2f2;
     }
-    td:nth-child(4) { width: 80px; }
-    td:nth-child(6) { width: 36px; }
-  </style>
-  <script>
-    let sortDir = Array(6).fill(true);
-    function sortTable(n) {
-      const table = document.getElementById("resultsTable");
-      const tbody = table.tBodies[0];
-      const rows = Array.from(tbody.rows);
-      const asc = sortDir[n];
-      const actualIndex = n === 5 ? 3 : n;
-      rows.sort((a, b) => {
-        let x = a.cells[actualIndex].innerText;
-        let y = b.cells[actualIndex].innerText;
-        if (actualIndex === 3) {
-          return asc ? new Date('2025-' + x) - new Date('2025-' + y) : new Date('2025-' + y) - new Date('2025-' + x);
-        }
-        if (!isNaN(x) && !isNaN(y)) {
-          return asc ? x - y : y - x;
-        }
-        return asc ? x.localeCompare(y) : y.localeCompare(x);
-      });
-      rows.forEach(row => tbody.appendChild(row));
-      sortDir[n] = !asc;
+    td:first-child, th:first-child {
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 1;
+      text-align: left;
+      padding-left: 8px;
     }
-  </script>
+  </style>
 </head>
 <body>
   <div class="container">
@@ -152,69 +134,78 @@
         <div class="label-box">OPRO Challenge&nbsp;&nbsp;&nbsp;</div>
         <div class="title-box">Havrylenko #1&nbsp;&nbsp;&nbsp;</div>
       </div>
-        <div class="results-label-container">
-            <div class="results-label">РЕЗУЛЬТАТЫ</div>
-            <div class="timestamp">челлендж завершен<br>2025-07-01 14:30</div>
+      <div class="results-label-container">
+        <div class="results-label">промежуточные<br>РЕЗУЛЬТАТЫ</div>
+        <div class="timestamp">
+          по состоянию на<br>
+          2025-07-01 14:30
         </div>
+      </div>
+    </div>
     <div class="table-wrapper">
-      <table id="resultsTable">
+      <table id="intermediateTable">
         <thead>
           <tr>
-            <th onclick="sortTable(0)">Место</th>
-            <th onclick="sortTable(1)">Баллы</th>
-            <th onclick="sortTable(2)">Ник</th>
-            <th onclick="sortTable(3)">Дата</th>
-            <th onclick="sortTable(4)">Время</th>
-            <th onclick="sortTable(5)">Шансы</th>
+            <th onclick="sortTable(0)">Ник</th>
+            <th onclick="sortTable(1)">1</th>
+            <th onclick="sortTable(2)">2</th>
+            <th onclick="sortTable(3)">3</th>
+            <th onclick="sortTable(4)">4</th>
+            <th onclick="sortTable(5)">5</th>
+            <th onclick="sortTable(6)">6</th>
+            <th onclick="sortTable(7)">7</th>
+            <th onclick="sortTable(8)">8</th>
+            <th onclick="sortTable(9)">9</th>
+            <th onclick="sortTable(10)">10</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="intermediateBody"></tbody>
       </table>
     </div>
-    <script>
-      const toSeconds = t => t.split(':').reduce((s, v, i) => s + (+v) * Math.pow(60, 2 - i), 0);
-      const toDate = d => new Date(`2025-${d.split(' ')[0]}T${d.split(' ')[1]}`);
-      const getRandomDateTime = (baseDay, index) => {
-        const date = new Date(2025, 5, baseDay + Math.floor(index / 10), 9 + (index % 10), (index * 7) % 60);
-        return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-      };
-      const getBonusChances = (completionOrder) => {
-        if (completionOrder <= 5) return 'x10';
-        if (completionOrder <= 10) return 'x5';
-        if (completionOrder <= 15) return 'x3';
-        return '';
-      };
-      let runners = Array.from({ length: 50 }, (_, i) => {
-        const completionOrder = (i * 13) % 50;
-        const date = getRandomDateTime(1, completionOrder);
-        const rawTime = `${String(1 + Math.floor(Math.random() * 3)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
-        return {
-          score: 10 + Math.floor(Math.random() * 40),
-          name: `runner_${i + 1}`,
-          date,
-          time: rawTime,
-          bonus: getBonusChances(completionOrder + 1)
-        };
-      });
-      runners.sort((a, b) => {
-        if (a.score !== b.score) return b.score - a.score;
-        const dateA = toDate(a.date);
-        const dateB = toDate(b.date);
-        if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
-        return toSeconds(a.time) - toSeconds(b.time);
-      });
-      const tbody = document.querySelector("#resultsTable tbody");
-      runners.forEach((row, index) => {
-        tbody.innerHTML += `<tr>
-          <td>${index + 1}</td>
-          <td>${row.score}</td>
-          <td>${row.name}</td>
-          <td>${row.date}</td>
-          <td>${row.time}</td>
-          <td>${row.bonus}</td>
-        </tr>`;
-      });
-    </script>
   </div>
+  <script>
+    const table = document.getElementById("intermediateTable");
+    const tbody = document.getElementById("intermediateBody");
+    const scandinavianNames = [
+      "Lars Nilsen", "Erik Johansen", "Kari Olsen", "Anna Berg", "Mats Andersson",
+      "Nina Haugen", "Sven Lindgren", "Greta Eklund", "Ole Pedersen", "Ingrid Dahl",
+      "Torbjörn Holm", "Helga Knutsen", "Jonas Strand", "Maria Lund", "Henrik Larsen",
+      "Elin Sørensen", "Magnus Björk", "Liv Hansen", "Jens Sandvik", "Tuva Blom",
+      "Kasper Aas", "Maja Hovland", "Stian Røed", "Ida Nyström", "Kristian Moe",
+      "Tiril Foss", "Eirik Sten", "Anja Myhre", "Emil Karlsen", "Sofia Norrman",
+      "Martin Sunde", "Camilla Vang", "Fredrik Thorsen", "Selma Ruud", "Andreas Vik",
+      "Malin Berge", "Thomas Nygaard", "Ronja Åkesson", "Leif Arnesen", "Nora Svendsen",
+      "Daniel Hauger", "Vilde Lie", "Oskar Eskilsson", "Signe Thune", "Robin Fagerström",
+      "Julie Hald", "Vegar Horn", "Emilia Eide", "Runar Gran", "Ella Knudsen"
+    ];
+
+    const runners = Array.from({ length: 50 }, (_, i) => {
+      const name = scandinavianNames[i];
+      const times = Array.from({ length: 10 }, (_, j) => {
+        return Math.random() > 0.7 ? '' : `${String(30 + Math.floor(Math.random() * 20)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+      });
+      return { name, times };
+    });
+
+    runners.forEach(r => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${r.name}</td>` + r.times.map(t => `<td>${t}</td>`).join('');
+      tbody.appendChild(row);
+    });
+
+    function sortTable(n) {
+      const rows = Array.from(tbody.rows);
+      let asc = table.dataset.sortAsc === 'true';
+      rows.sort((a, b) => {
+        let x = a.cells[n].innerText;
+        let y = b.cells[n].innerText;
+        if (x === '') return 1;
+        if (y === '') return -1;
+        return asc ? x.localeCompare(y) : y.localeCompare(x);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      table.dataset.sortAsc = !asc;
+    }
+  </script>
 </body>
 </html>
