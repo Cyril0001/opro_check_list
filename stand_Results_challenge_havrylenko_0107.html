@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPRO Challenge Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto Condensed', sans-serif;
+      background: #f6f6f6;
+      padding: 10px;
+      color: #333;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .banner {
+      background-color: #ff6005;
+      text-align: center;
+      padding: 0px 0;
+    }
+    .banner img {
+      width: 400px;
+      max-width: 100%;
+    }
+    .spacer {
+      height: 0px;
+      background-color: white;
+    }
+    .title-flex {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    .title-cover {
+      background-color: white;
+      border: 1px solid #ff6005;
+      width: 61.8%;
+      text-align: left;
+      padding: 0;
+    }
+    .label-box {
+      background-color: #ff6005;
+      border-bottom: 1px solid #ff6005;
+      color: white;
+      font-family: 'Noto Serif Display', serif;
+      font-size: 20px;
+      font-weight: 400;
+      padding: 4px 30px;
+      white-space: nowrap;
+    }
+    .title-box {
+      background-color: white;
+      color: #444;
+      font-family: 'Noto Serif Display', serif;
+      font-size: 25px;
+      font-weight: 400;
+      padding: 4px 30px;
+      white-space: nowrap;
+    }
+    .results-label {
+      color: #ff6005;
+      font-size: 18px;
+      font-weight: 400;
+    }
+    .results-label-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      flex-grow: 1;
+      margin-left: 10px;
+      padding-top: 0px;
+      margin-top: -4px;
+    }
+    .timestamp {
+      text-align: left ;
+      color: #ff6005;
+      font-size: 14px;
+      font-weight: 400;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+    }
+     .note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 10px;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0px;
+      font-size: 12px;
+      min-width: 360px;
+    }
+    th, td {
+      padding: 4px;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #ff6005;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+    }
+    td {
+      text-align: center;
+    }
+    td:nth-child(3) {
+      text-align: left;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    td:nth-child(4) { width: 32px; }
+    td:nth-child(5) { width: 70px; }
+    td:nth-child(6) { width: 54px; }
+  </style>
+  <script>
+let sortDir = Array(6).fill(true);
+
+function sortTable(n) {
+  const table = document.getElementById("resultsTable");
+  const tbody = table.tBodies[0];
+  const rows = Array.from(tbody.rows);
+  const asc = sortDir[n];
+
+  rows.sort((a, b) => {
+    // для столбца Date (n===4) парсим дату+время
+    if (n === 4) {
+      // текст в формате "MM-DD HH:MM"
+      const pa = parseDateTime(a.cells[4].innerText);
+      const pb = parseDateTime(b.cells[4].innerText);
+      return asc ? pa - pb : pb - pa;
+    }
+    // сортируем по баллам (меньше баллов - выше)
+    if (n === 1) {
+      const xa = parseInt(a.cells[1].innerText);
+      const xb = parseInt(b.cells[1].innerText);
+      return asc ? xa - xb : xb - xa;
+    }
+    // простой числовой или строковый выпад
+    const xa = a.cells[n].innerText.trim();
+    const xb = b.cells[n].innerText.trim();
+    if (!isNaN(xa) && !isNaN(xb)) {
+      return asc ? xa - xb : xb - xa;
+    }
+    return asc ? xa.localeCompare(xb) : xb.localeCompare(xa);
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+  sortDir[n] = !asc;
+}
+
+// вспомогательная функция для разбора "MM-DD HH:MM"
+function parseDateTime(str) {
+  // вставляем год (любой опорный, например 2025)
+  // и приводим к ISO-подстроке
+  // из "06-12 14:30" → "2025-06-12T14:30:00"
+  const [md, hm] = str.split(' ');
+  const [MM, DD] = md.split('-').map(x=>x.padStart(2,'0'));
+  return new Date(`2025-${MM}-${DD}T${hm}:00`).getTime();
+}
+
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="banner">
+      <img src="https://opro-check-list.vercel.app/images/OrienteeringPRO_AR_OK_logo-white.png" alt="OPRO Challenge banner">
+    </div>
+    <div class="spacer"></div>
+    <div class="title-flex">
+      <div class="title-cover">
+        <div class="label-box">OPRO Challenge&nbsp;&nbsp;&nbsp;</div>
+        <div class="title-box">Havrylenko #1&nbsp;&nbsp;&nbsp;</div>
+      </div>
+        <div class="results-label-container">
+            <div class="results-label">промежуточные<br>РЕЗУЛЬТАТЫ</div>
+            <div class="timestamp">на 2025-07-01 14:30</div>
+        </div>
+    </div>
+    <div class="table-wrapper">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Место</th>
+            <th onclick="sortTable(1)">Баллы¹</th>
+            <th onclick="sortTable(2)">Ник</th>
+            <th onclick="sortTable(3)">Шансы²</th>
+            <th onclick="sortTable(4)">Завершение³</th>
+            <th onclick="sortTable(5)">Время⁴</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="note">
+        <br>
+      ¹ Баллы - AR-трассы можно проходить в любое время. За каждую AR-трассу получаешь баллы: 1 место — 1 балл, 2 место — 2 балла, ..., 20 место — 20 баллов и далее. ПОБЕЖДАЕТ тот, у кого меньше баллов.
+      <br><br>
+      ² Шансы - БОНУСНЫЕ ШАНСЫ при розыгрыше призов получают участники, которые завершили челлендж раньше других (без учёта баллов)
+      <br><br>
+      ³ Завершение - дата и время завершения челленджа спортсменом
+      <br><br>
+      ⁴ Время - суммарное чистое время прохождения трасс
+    </div>
+    </div>
+    <script>
+      const scandinavianNames = [
+        "Lars Nilsen", "Erik Johansen", "Kari Olsen", "Anna Berg", "Mats Andersson",
+        "Nina Haugen", "Sven Lindgren", "Greta Eklund", "Ole Pedersen", "Ingrid Dahl",
+        "Torbjörn Holm", "Helga Knutsen", "Jonas Strand", "Maria Lund", "Henrik Larsen",
+        "Elin Sørensen", "Magnus Björk", "Liv Hansen", "Jens Sandvik", "Tuva Blom",
+        "Kasper Aas", "Maja Hovland", "Stian Røed", "Ida Nyström", "Kristian Moe",
+        "Tiril Foss", "Eirik Sten", "Anja Myhre", "Emil Karlsen", "Sofia Norrman",
+        "Martin Sunde", "Camilla Vang", "Fredrik Thorsen", "Selma Ruud", "Andreas Vik",
+        "Malin Berge", "Thomas Nygaard", "Ronja Åkesson", "Leif Arnesen", "Nora Svendsen",
+        "Daniel Hauger", "Vilde Lie", "Oskar Eskilsson", "Signe Thune", "Robin Fagerström",
+        "Julie Hald", "Vegar Horn", "Emilia Eide", "Runar Gran", "Ella Knudsen"
+      ];
+
+      const toSeconds = t => t.split(':').reduce((s, v, i) => s + (+v) * Math.pow(60, 2 - i), 0);
+      const toDate = d => new Date(`2025-${d.split(' ')[0]}T${d.split(' ')[1]}`);
+      const getRandomDateTime = (baseDay, index) => {
+        const date = new Date(2025, 5, baseDay + Math.floor(index / 10), 9 + (index % 10), (index * 7) % 60);
+        return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      };
+      const getBonusChances = (completionOrder) => {
+        if (completionOrder <= 5) return '';
+        if (completionOrder <= 10) return '';
+        if (completionOrder <= 15) return '';
+        return '';
+      };
+      let runners = Array.from({ length: 50 }, (_, i) => {
+        const completionOrder = (i * 13) % 50;
+        const date = getRandomDateTime(1, completionOrder);
+        const rawTime = `${String(1 + Math.floor(Math.random() * 3)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+        return {
+          score: 10 + Math.floor(Math.random() * 40),
+          name: scandinavianNames[i % scandinavianNames.length],
+          bonus: getBonusChances(completionOrder + 1),
+          date: "",  // Оставляем пустым, т.к. не все участники завершили
+          time: `${String(Math.floor(Math.random() * 3) + 1).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}` // Имитируем прохождение трассы
+        };
+      });
+      runners.sort((a, b) => {
+        // Сортируем сначала по баллам (меньше - выше)
+        if (a.score !== b.score) return a.score - b.score;
+        const dateA = toDate(a.date);
+        const dateB = toDate(b.date);
+        if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
+        return toSeconds(a.time) - toSeconds(b.time);
+      });
+      const tbody = document.querySelector("#resultsTable tbody");
+      runners.forEach((row, index) => {
+        tbody.innerHTML += `<tr>
+          <td>${index + 1}</td>
+          <td>${row.score}</td>
+          <td>${row.name}</td>
+          <td>${row.bonus}</td>
+          <td>${row.date}</td>
+          <td>${row.time}</td>
+        </tr>`;
+      });
+    </script>
+  </div>
+</body>
+</html>
