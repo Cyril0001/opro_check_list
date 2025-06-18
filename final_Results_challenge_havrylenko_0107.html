@@ -13,6 +13,18 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="styles/responsive.css"/>
+
+  <style>
+    tr.completed > td {
+      background-color: #eaf7e9 !important; /* Зеленоватая подсветка для финишеров */
+    }
+    .subtitle {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
 <div class="container">
@@ -26,11 +38,9 @@
           </a>
         </h1>
       </div>
-      
       <div class="header-right-image">
-        <img src="images/ok.png" alt="OK Icon">
+        <img src="images/ok.png" alt="OK Icon"/>
       </div>
-
     </div>
   </header>
 
@@ -40,81 +50,50 @@
     <div class="title-flex">
       <div class="title-cover">
         <div class="label-box">OPRO Challenge</div>
-        <div class="title-box">Havrylenко #1</div>
+        <div class="title-box">Havryленко #1</div>
       </div>
       <div class="title-cover">
-        <div class="label-box">РЕЗУЛЬТАТЫ</div>
-        <div class="title-box">
-          Челлендж завершен:<br>2025-07-01 14:30
-        </div>
+        <div class="label-box">СТАТУС</div>
+        <div class="title-box" id="challengeStatus">
+          </div>
       </div>
     </div>
+
     <div class="table-wrapper">
       <table id="resultsTable">
         <thead>
-        <tr>
-          <th onclick="sortTable(this, 0)">Cat.¹</th>
-          <th onclick="sortTable(this, 1)">Athlete</th>
-          <th onclick="sortTable(this, 2)">Number²</th>
-          <th onclick="sortTable(this, 3)">Place³</th>
-          <th onclick="sortTable(this, 4)">Score⁴</th>
-          <th onclick="sortTable(this, 5)">Сhance⁵</th>
-          <th onclick="sortTable(this, 6)">Completion⁶</th>
-          <th onclick="sortTable(this, 7)">Time⁷</th>
-        </tr>
+          <tr>
+            <th onclick="sortTable(this, 0)">Cat.¹</th>
+            <th onclick="sortTable(this, 1)">Athlete</th>
+            <th onclick="sortTable(this, 2)">Number²</th>
+            <th onclick="sortTable(this, 3)">Place³</th>
+            <th onclick="sortTable(this, 4)">Score⁴</th>
+            <th onclick="sortTable(this, 5)">Сhance⁵</th>
+            <th onclick="sortTable(this, 6)">Completion⁶</th>
+            <th onclick="sortTable(this, 7)">Time⁷</th>
+            <th onclick="sortTable(this, 8)">1 тр.</th>
+            <th onclick="sortTable(this, 9)">2 тр.</th>
+            <th onclick="sortTable(this, 10)">3 тр.</th>
+            <th onclick="sortTable(this, 11)">4 тр.</th>
+            <th onclick="sortTable(this, 12)">5 тр.</th>
+            <th onclick="sortTable(this, 13)">6 тр.</th>
+            <th onclick="sortTable(this, 14)">7 тр.</th>
+            <th onclick="sortTable(this, 15)">8 тр.</th>
+            <th onclick="sortTable(this, 16)">9 тр.</th>
+            <th onclick="sortTable(this, 17)">10 тр.</th>
+          </tr>
         </thead>
         <tbody>
-        </tbody>
+          </tbody>
       </table>
     </div>
+
     <div class="note">
-      <h3 class="note-title">Примечания к таблице</h3>
-  <dl class="note-list">
-    <div class="note-item">
-      <dt>¹ Категории</dt>
-      <dd>
-        <ul class="category-list">
-          <li>1 — женщины до 18 лет.</li>
-          <li>2 — женщины от 18 до 40 лет.</li>
-          <li>3 — женщины от 40 до 55 лет.</li>
-          <li>4 — женщины от 55 лет.</li>
-          <li>5 — мужчины до 18 лет.</li>
-          <li>6 — мужчины от 18 до 40 лет.</li>
-          <li>7 — мужчины от 40 до 55 лет.</li>
-          <li>8 — мужчины от 55 лет.</li>
-        </ul>
-      </dd>
-    </div>
-    <div class="note-item">
-      <dt>² Номер</dt>
-      <dd>Номер спортсмена, который используется при розыгрыше призов. 1-й номер получает тот, кто завершил челлендж раньше других. Номер влияет на бонусные шансы.</dd>
-    </div>
-    <div class="note-item">
-      <dt>³ Место</dt>
-      <dd>Место спортсмена в его категории.</dd>
-    </div>
-    <div class="note-item">
-      <dt>⁴ Баллы</dt>
-      <dd>За каждую AR-трассу начисляются баллы (1 место — 1 балл, 2 — 2 балла, и т.д.). Побеждает тот, у кого меньше сумма баллов. При равенстве баллов выше будет тот, кто раньше завершил челлендж.</dd>
-    </div>
-    <div class="note-item">
-      <dt>⁵ Шансы</dt>
-      <dd>Бонусные шансы при розыгрыше призов.</dd>
-    </div>
-    <div class="note-item">
-      <dt>⁶ Завершение</dt>
-      <dd>Дата и время завершения челленджа спортсменом.</dd>
-    </div>
-    <div class="note-item">
-      <dt>⁷ Время</dt>
-      <dd>Суммарное чистое время прохождения всех трасс челленджа.</dd>
-    </div>
-  </dl>
-</div>
+      </div>
+  </div>
 </div>
 
-<script type="module" src="js/data.js"></script>
-<script type="module" src="js/main.js"></script>
-
+  <script type="module" src="js/data.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

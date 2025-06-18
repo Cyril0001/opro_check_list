@@ -1,105 +1,103 @@
 // js/main.js
+import { generateFinalRunners, generateIntermediateRunners, FINISHERS_REQUIRED_FOR_COMPLETION } from './data.js';
 
-// Импортируем функции для генерации данных
-import { generateFinalRunners, generateIntermediateRunners } from './data.js';
-
-// Выполняем код после полной загрузки страницы
 document.addEventListener('DOMContentLoaded', () => {
-
-  // Проверяем, есть ли на странице таблица финальных результатов
-  if (document.getElementById('resultsTable')) {
-    const finalRunners = generateFinalRunners();
-    renderFinalResults(finalRunners);
-  }
-
-  // Проверяем, есть ли на странице таблица промежуточных результатов
-  if (document.getElementById('intermediateTable')) {
-    const intermediateRunners = generateIntermediateRunners();
-    renderIntermediateResults(intermediateRunners);
-  }
-
-});
-
-/**
- * Отрисовывает таблицу ФИНАЛЬНЫХ результатов.
- * @param {Array} runners - Массив с данными участников.
- */
-function renderFinalResults(runners) {
-  const tbody = document.querySelector('#resultsTable tbody');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-  runners.forEach((row, idx) => {
-    // Присваиваем номер участника после сортировки
-    row.number = idx + 1;
-    // ИСПРАВЛЕНО: Убраны некорректные теги и синтаксис
-    tbody.innerHTML += `
-      <tr>
-        <td>${row.category}</td>
-        <td>${row.name}</td>
-        <td>${row.number}</td>
-        <td>${idx + 1}</td>
-        <td>${row.score}</td>
-        <td>${row.bonus}</td>
-        <td>${row.date}</td>
-        <td>${row.time}</td>
-      </tr>`;
-  });
-}
-
-/**
- * Отрисовывает таблицу ПРОМЕЖУТОЧНЫХ результатов.
- * @param {Array} runners - Массив с данными участников.
- */
-function renderIntermediateResults(runners) {
-  const tbody = document.getElementById("intermediateBody");
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-  runners.forEach(r => {
-    const row = document.createElement('tr');
-    
-    const totalSeconds = r.times.reduce((acc, t) => {
-      const [min, sec] = t.split(':').map(Number);
-      return acc + min * 60 + sec;
-    }, 0);
-    
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    // ИСПРАВЛЕНО: Убраны некорректные теги и синтаксис
-    const resultText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    
-    const timesHtml = r.times.map(t => `<td>${t}</td>`).join('');
-    // ИСПРАВЛЕНО: Убраны некорректные теги и синтаксис
-    row.innerHTML = `<td>${r.name}</td><td>${resultText}</td>${timesHtml}`;
-    tbody.appendChild(row);
-  });
-}
-
-/**
- * Функция сортировки для ПРОМЕЖУТОЧНОЙ таблицы.
- * @param {number} n - Индекс колонки для сортировки.
- */
-window.sortTable = function(n) {
-  const table = document.getElementById("intermediateTable");
+  const table = document.getElementById('resultsTable');
   if (!table) return;
 
-  const tbody = table.querySelector("tbody");
-  const rows = Array.from(tbody.rows);
-  const isAsc = table.dataset.sortAsc === 'true';
+  const intermediateRunners = generateIntermediateRunners();
+  const finalRunners = generateFinalRunners(intermediateRunners);
 
-  rows.sort((a, b) => {
-    let x = a.cells[n]?.innerText || '';
-    let y = b.cells[n]?.innerText || '';
-    return isAsc 
-      ? x.localeCompare(y, undefined, { numeric: true }) 
-      : y.localeCompare(x, undefined, { numeric: true });
+  const statusEl = document.getElementById('challengeStatus');
+  const challengeIsComplete = finalRunners.length >= FINISHERS_REQUIRED_FOR_COMPLETION;
+
+  // Управляем статусом челленджа
+  if (statusEl) {
+    if (challengeIsComplete) {
+      const fiftiethFinisher = [...finalRunners].sort((a,b) => a.number - b.number)[FINISHERS_REQUIRED_FOR_COMPLETION - 1];
+      statusEl.innerHTML = `завершен:<br/>${fiftiethFinisher.date}`;
+    } else {
+      statusEl.innerHTML = `текущий<br/><span class="subtitle">${finalRunners.length} из ${FINISHERS_REQUIRED_FOR_COMPLETION} завершили</span>`;
+    }
+  }
+
+  // Управляем видимостью колонок
+  if (challengeIsComplete) {
+    table.classList.add('challenge-complete');
+  } else {
+    table.classList.remove('challenge-complete');
+  }
+
+  renderCombinedResults(table, finalRunners, intermediateRunners, challengeIsComplete);
+});
+
+function renderCombinedResults(table, finalRunners, intermediateRunners, challengeIsComplete) {
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+  const finalMap = new Map(finalRunners.map(r => [r.name, r]));
+  
+  const displayList = intermediateRunners.map(r => ({
+    ...r,
+    isFinished: finalMap.has(r.name)
+  }));
+  
+  displayList.sort((a, b) => {
+    if (a.isFinished !== b.isFinished) return b.isFinished - a.isFinished;
+    if (a.isFinished) { // Если оба финишеры, сортируем по номеру (порядку финиша)
+      return finalMap.get(a.name).number - finalMap.get(b.name).number;
+    }
+    return a.name.localeCompare(b.name); // Иначе по имени
   });
 
-  // ЗАКОНЧЕНО: Добавлены недостающие строки
-  // Вставляем отсортированные строки обратно в таблицу
-  rows.forEach(r => tbody.appendChild(r));
-  
-  // Меняем направление для следующего клика
-  table.dataset.sortAsc = (!isAsc).toString();
+  displayList.forEach(runner => {
+    const tr = document.createElement('tr');
+    const finData = finalMap.get(runner.name);
+    
+    if (finData) {
+      if (challengeIsComplete) {
+        tr.classList.add('completed');
+      }
+      tr.innerHTML = `
+        <td>${finData.category}</td>
+        <td>${finData.name}</td>
+        <td>${finData.number}</td>
+        <td>${finData.place}</td>
+        <td>${finData.score}</td>
+        <td>${finData.bonus}</td>
+        <td>${finData.date}</td>
+        <td>${finData.time}</td>
+        ${runner.times.map(t => `<td>${t}</td>`).join('')}
+      `;
+    } else {
+      tr.innerHTML = `
+        <td>${runner.category}</td>
+        <td>${runner.name}</td>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+        ${runner.times.map(t => `<td>${t}</td>`).join('')}
+      `;
+    }
+    tbody.appendChild(tr);
+  });
 }
+
+window.sortTable = function(thElem, colIndex) {
+  const table = thElem.closest('table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.rows);
+  const asc = table.dataset.sortAsc === 'true';
+
+  rows.sort((a, b) => {
+    const aText = a.cells[colIndex]?.innerText || '';
+    const bText = b.cells[colIndex]?.innerText || '';
+    if (aText === '' && bText !== '') return 1;
+    if (aText !== '' && bText === '') return -1;
+    if (aText === '' && bText === '') return 0;
+    
+    return asc
+      ? aText.localeCompare(bText, undefined, { numeric: true })
+      : bText.localeCompare(aText, undefined, { numeric: true });
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+  table.dataset.sortAsc = (!asc).toString();
+};
