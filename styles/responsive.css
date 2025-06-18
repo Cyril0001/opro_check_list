@@ -1,0 +1,414 @@
+/* ИЗМЕНЕНИЕ: Добавлены CSS переменные для управления цветами */
+:root {
+  --header-bg: #EEF1F6; 
+  --logo-text-color: #FF6004; 
+}
+
+/* Глобальные стили */
+body {
+  font-family: 'Roboto Condensed', sans-serif;
+  background: #f6f6f6;
+  margin: 0;
+  padding: 0; /* Убираем отступы с body */
+  color: #333;
+}
+
+.container {
+  margin: 0 auto;
+  background: white;
+  /* padding: 10px; — этот паддинг убран, чтобы хедер прилегал к краям */
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+/* --- НОВЫЕ СТИЛИ ХЕДЕРА --- */
+.custom-header {
+  background-color: var(--header-bg); 
+  height: 75px; 
+  border-bottom: 1px solid #d1d9e6; 
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 0 10px; /* Добавим небольшой отступ для мобильных */
+}
+
+.custom-header-container {
+  max-width: 100%; /* Контейнер внутри хедера будет управлять основной шириной */
+  width: 100%;
+  margin: 0 auto; 
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+}
+
+.custom-logo {
+  display: flex;
+  align-items: center;
+}
+
+.custom-logo img {
+  width: 50px;   
+  height: 50px;
+  object-fit: contain; 
+  margin-right: 15px; 
+}
+
+.custom-logo h1 {
+  margin: 0;
+  font-size: 24px; 
+  font-weight: 700; 
+  letter-spacing: 0.5px;
+  font-family: "Sofia Sans Semi Condensed", "Roboto", "Helvetica Neue", Arial, sans-serif;
+}
+
+.custom-logo h1 a {
+  color: var(--logo-text-color); 
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.custom-logo h1 a:hover {
+  color: #e0701b; 
+}
+/* --- КОНЕЦ СТИЛЕЙ ХЕДЕРА --- */
+
+
+.spacer {
+  height: 20px;
+}
+
+/* Блок-обертка для центрирования основного контента */
+.content-block {
+  max-width: 60%;
+  margin: 0 auto;
+  padding: 0 10px; /* Добавляем боковые отступы здесь */
+}
+
+/* Флекс-контейнер для заголовков */
+.title-flex {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.title-cover {
+  border: 1px solid #ff6005;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  flex-basis: 45%;
+  min-width: 0;
+}
+
+/* Внутренняя стилизация заголовков */
+.label-box {
+  background-color: #ff6005;
+  border-bottom: 1px solid #ff6005;
+  color: white;
+  font-size: 20px;
+  font-weight: 400;
+  padding: 4px 30px;
+  white-space: nowrap;
+}
+
+.title-box {
+  background-color: white;
+  color: #444;
+  font-size: 25px;
+  font-weight: 400;
+  padding: 4px 30px;
+  white-space: nowrap;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-flex > .title-cover:nth-child(2) .title-box {
+    font-size: 22px; 
+}
+
+/* Обёртка таблицы */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Стили таблицы */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 700px;
+}
+
+th, td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  white-space: nowrap; /* Добавим, чтобы время и короткие значения не переносились */
+}
+
+th {
+  background-color: #ff6005;
+  color: white;
+  cursor: pointer;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Выравнивание по левому краю для второй колонки */
+#resultsTable td:nth-child(2),
+#intermediateTable td:nth-child(1) {
+  text-align: left;
+}
+
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Примечание под таблицей */
+.note {
+  margin-top: 40px;
+  padding: 25px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+}
+
+.note-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #343a40;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+  font-family: "Sofia Sans Semi Condensed", sans-serif;
+}
+
+.note-list {
+  margin: 0;
+  padding: 0;
+}
+
+.note-item {
+  padding: 12px 0;
+}
+.note-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.note dt {
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 5px;
+  font-size: clamp(15px, 1.5vw, 17px);
+}
+
+.note dd {
+  margin-left: 0;
+  color: #6c757d;
+  line-height: 1.6;
+  font-size: clamp(13px, 1.5vw, 15px);
+}
+
+.note dd .category-list {
+  list-style-type: disc;
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding-left: 20px;
+}
+
+.note dd .category-list li {
+  padding-bottom: 5px;
+}
+
+.note dd .category-list li:last-child {
+  padding-bottom: 0;
+}
+
+
+/* --- АДАПТИВНОСТЬ --- */
+
+@media (max-width: 1301px) { 
+    .content-block {
+        max-width: 80%;
+    }
+    .title-box {
+        white-space: normal;
+    }
+}
+
+@media (max-width: 1024px) {
+  .content-block {
+    max-width: 95%;
+  }
+  /* ИЗМЕНЕНИЕ: Уменьшаем отступы в ячейках для планшетов */
+  th, td {
+    padding: 7px 5px;
+  }
+}
+
+@media (max-width: 767px) {
+  .custom-logo h1 {
+    font-size: 20px;
+  }
+  .content-block {
+    max-width: 100%;
+  }
+  .label-box, .title-box {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .title-box {
+    font-size: 20px;
+  }
+  .title-flex > .title-cover:nth-child(2) .title-box {
+    font-size: 16px;
+  }
+  /* ИЗМЕНЕНИЕ: Делаем таблицу еще компактнее для мобильных */
+  table {
+    min-width: 600px; /* Уменьшаем минимальную ширину */
+    font-size: 11px;  /* Можно немного уменьшить шрифт */
+  }
+  th, td {
+    padding: 6px 4px; /* Уменьшаем отступы, особенно по бокам */
+  }
+}
+
+@media (max-width: 420px) {
+  .custom-logo img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
+  .custom-logo h1 {
+    font-size: 18px;
+  }
+  .label-box {
+    font-size: 15px;
+    padding: 4px 10px;
+    white-space: normal;
+    text-align: center;
+  }
+  .title-box {
+    font-size: 16px;
+    padding: 6px 10px;
+  }
+  .title-flex > .title-cover:nth-child(2) .title-box {
+    font-size: 14px;
+  }
+}
+
+/* --- СТИЛИ ДЛЯ ЗАКРЕПЛЕННЫХ КОЛОНОК (intermediateTable) --- */
+
+/* Задаем явную ширину для первой колонки, чтобы вторая знала, где начинаться */
+#intermediateTable th:nth-child(1),
+#intermediateTable td:nth-child(1) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+}
+
+/* Общие стили для закрепления */
+#intermediateTable th:nth-child(1), #intermediateTable td:nth-child(1),
+#intermediateTable th:nth-child(2), #intermediateTable td:nth-child(2) {
+  position: sticky;
+  z-index: 2; /* Поверх обычных ячеек */
+}
+
+/* Закрепление ПЕРВОЙ колонки */
+#intermediateTable th:nth-child(1),
+#intermediateTable td:nth-child(1) {
+  left: 0;
+  z-index: 2; /* Поверх второй закрепленной колонки */
+}
+
+/* Закрепление ВТОРОЙ колонки */
+#intermediateTable th:nth-child(2),
+#intermediateTable td:nth-child(2) {
+  /* Отступ равен ширине первой колонки */
+  left: 150px;
+}
+
+/* Задаем фон для закрепленных ячеек, чтобы скрыть под ними контент */
+#intermediateTable th:nth-child(1),
+#intermediateTable th:nth-child(2) {
+  background-color: #ff6005; /* Цвет шапки */
+}
+
+#intermediateTable td:nth-child(1),
+#intermediateTable td:nth-child(2) {
+  background-color: #ffffff; /* Цвет нечетных строк */
+}
+
+/* Не забываем про фон для ЧЕТНЫХ строк */
+#intermediateTable tr:nth-child(even) td:nth-child(1),
+#intermediateTable tr:nth-child(even) td:nth-child(2) {
+  background-color: #f2f2f2; /* Цвет четных строк */
+}
+
+/* --- СТИЛИ ДЛЯ ЗАКРЕПЛЕННЫХ КОЛОНОК (resultsTable) --- */
+
+/* Задаем явную ширину для первых двух колонок */
+#resultsTable th:nth-child(1),
+#resultsTable td:nth-child(1) {
+  width: 50px;
+  min-width: 50px;
+}
+#resultsTable th:nth-child(2),
+#resultsTable td:nth-child(2) {
+  width: 150px;
+  min-width: 150px;
+}
+
+/* Общие стили для закрепления */
+#resultsTable th:nth-child(1), #resultsTable td:nth-child(1),
+#resultsTable th:nth-child(2), #resultsTable td:nth-child(2) {
+  position: sticky;
+  z-index: 2;
+}
+
+/* Закрепление ПЕРВОЙ колонки (Cat.) */
+#resultsTable th:nth-child(1),
+#resultsTable td:nth-child(1) {
+  left: 0;
+  z-index: 2;
+}
+
+/* Закрепление ВТОРОЙ колонки (Athlete) */
+#resultsTable th:nth-child(2),
+#resultsTable td:nth-child(2) {
+  /* Отступ равен ширине ПЕРВОЙ колонки */
+  left: 50px; 
+}
+
+/* Задаем фон для закрепленных ячеек */
+#resultsTable th:nth-child(1),
+#resultsTable th:nth-child(2) {
+  background-color: #ff6005;
+}
+
+#resultsTable td:nth-child(1),
+#resultsTable td:nth-child(2) {
+  background-color: #ffffff;
+}
+
+#resultsTable tr:nth-child(even) td:nth-child(1),
+#resultsTable tr:nth-child(even) td:nth-child(2) {
+  background-color: #f2f2f2;
+}
