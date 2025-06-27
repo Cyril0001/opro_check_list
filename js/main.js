@@ -1,21 +1,34 @@
 // js/main.js
 import { fetchChallengeResults } from './data.js';
 
+// --- Глобальний стан для даних та сортування ---
+let originalData = [];
+let sortCriteria = []; // Масив об'єктів, наприклад: [{ key: 'category', dir: 'asc' }]
+
 document.addEventListener('DOMContentLoaded', async () => {
-  const challengeId = 20; // замените на нужный или берите из URL/data-атрибута
+  const challengeId = 20; // або беріть з URL/data-атрибута
   try {
     const data = await fetchChallengeResults(challengeId);
+    
+    // Зберігаємо початкові дані один раз
+    originalData = Array.isArray(data.data) ? data.data : [];
+    
+    // Перераховуємо місця всередині категорій при завантаженні
+    recalculatePlaces(originalData);
+
     updateHeader(data);
     updateStatus(data);
-    renderTable(data);
+    renderTable(originalData, data.countRoutes); // Перший рендер з початковими даними
+    renderCategories(data.categories);
   } catch (err) {
     console.error(err);
     const statusEl = document.getElementById('challengeStatus');
-    if (statusEl) statusEl.textContent = 'Ошибка загрузки данных';
+    // Оновлено: повідомлення про помилку українською
+    if (statusEl) statusEl.textContent = 'Помилка завантаження даних';
   }
 });
 
-/** Заголовок «OPRO – {type}» и имя челленджа */
+// --- Функції для оновлення UI ---
 function updateHeader(data) {
   const typeLabel = document.getElementById('challengeTypeLabel');
   const nameLabel = document.getElementById('challengeName');
@@ -23,115 +36,196 @@ function updateHeader(data) {
   if (nameLabel) nameLabel.textContent = data.name;
 }
 
-/** Статус CHALLENGE — X/Y, EVENT — «Активен»/«Завершён» */
+/**
+ * ОНОВЛЕНО: Логіка статусу
+ */
 function updateStatus(data) {
   const statusEl = document.getElementById('challengeStatus');
   if (!statusEl) return;
-
   if (data.type === 'CHALLENGE') {
-    const doneCount = (data.data || []).filter(r => r.completion).length;
-    statusEl.textContent = `${doneCount}/${data.maxParticipants}`;
+    const done = originalData.filter(r => r.completion).length;
+    const max = data.maxParticipants;
+
+    // Якщо кількість завершених дорівнює максимуму, показуємо "Завершено"
+    if (max > 0 && done >= max) {
+      statusEl.textContent = 'Завершено';
+    } else {
+      statusEl.textContent = `${done}/${max}`;
+    }
+    
   } else {
-    const now = new Date();
-    statusEl.textContent = new Date(data.endDate) > now ? 'Активен' : 'Завершён';
+    // Для івентів логіка залишається тією ж
+    statusEl.textContent = new Date(data.endDate) > new Date()
+      ? 'Активний'
+      : 'Завершено';
   }
 }
 
+function renderCategories(categories = []) {
+  const ul = document.getElementById('categoryList');
+  if (!ul) return;
+  ul.innerHTML = '';
+  categories.forEach(cat => {
+    const li = document.createElement('li');
+    li.textContent = `${cat.numberCategory} — ${cat.description}`;
+    ul.appendChild(li);
+  });
+}
+
 /**
- * Строит таблицу:
- * 1) Cat.¹, Athlete, Number²
- * 2) Place³, Score⁴ (если есть в данных) — перед Chance⁵
- * 3) Chance⁵, Completion⁶, Time⁷
- * 4) Динамические колонки «1 тр.», «2 тр.» … «N тр.»
- *    Причём «i тр.» привязан к ID трассы из perRouteTime, а не просто к порядковому номеру.
+ * Перераховує місця всередині кожної категорії.
+ * Ця функція мутує вихідний масив даних.
  */
-function renderTable(data) {
-  const rows = Array.isArray(data.data) ? data.data : [];
-  const declaredCount = data.countRoutes || 0;
+function recalculatePlaces(rows) {
+  const groups = {};
+  rows.forEach(r => {
+    if (r.place != null) {
+      groups[r.category] = groups[r.category] || [];
+      groups[r.category].push(r);
+    }
+  });
 
-  const table    = document.getElementById('resultsTable');
+  Object.values(groups).forEach(group => {
+    group.sort((a, b) => a.place - b.place);
+    group.forEach((r, idx) => {
+      r.place = idx + 1; 
+    });
+  });
+}
+
+
+// --- Логіка сортування ---
+
+/**
+ * Обробляє клік по заголовку для сортування.
+ * @param {MouseEvent} event - Подія кліку.
+ * @param {string} key - Ключ поля для сортування (e.g., 'category').
+ * @param {string} type - 'field' або 'route' для різних типів колонок.
+ */
+function handleSort(event, key, type = 'field') {
+  const isShiftClick = event.shiftKey;
+  const criterion = { key, dir: 'asc', type };
+
+  const existingIndex = sortCriteria.findIndex(c => c.key === key);
+
+  if (existingIndex > -1) {
+    sortCriteria[existingIndex].dir = sortCriteria[existingIndex].dir === 'asc' ? 'desc' : 'asc';
+    if (!isShiftClick) {
+      sortCriteria = [sortCriteria[existingIndex]];
+    }
+  } else {
+    if (!isShiftClick) {
+      sortCriteria = [];
+    }
+    sortCriteria.push(criterion);
+  }
+
+  applySortAndRender();
+}
+
+/**
+ * Применяет текущие критерии сортировки и перерисовывает таблицу.
+ */
+function applySortAndRender() {
+  let dataToSort = [...originalData];
+
+  dataToSort.sort((a, b) => {
+    for (const criterion of sortCriteria) {
+      let valA, valB;
+
+      if (criterion.type === 'route') {
+        valA = a.perRouteTime?.[criterion.key];
+        valB = b.perRouteTime?.[criterion.key];
+      } else {
+        valA = a[criterion.key];
+        valB = b[criterion.key];
+      }
+
+      if (valA == null && valB != null) return 1;
+      if (valA != null && valB == null) return -1;
+      if (valA == null && valB == null) continue;
+
+      const comparison = String(valA).localeCompare(String(valB), undefined, { numeric: true });
+      
+      if (comparison !== 0) {
+        return criterion.dir === 'asc' ? comparison : -comparison;
+      }
+    }
+    return 0; 
+  });
+  
+  const countRoutes = originalData.length > 0 ? Math.max(...originalData.map(r => Object.keys(r.perRouteTime || {}).length)) : 0;
+  renderTable(dataToSort, countRoutes);
+}
+
+
+/**
+ * Основна функція рендерингу. Тепер вона просто "рисує" передані дані.
+ * @param {Array} rowsToRender - Масив даних для відображення.
+ * @param {number} countRoutes - Кількість трас.
+ */
+function renderTable(rowsToRender, countRoutes) {
+  const table = document.getElementById('resultsTable');
   const theadRow = document.getElementById('resultsTableHeader');
-  const tbody    = table.querySelector('tbody');
+  const tbody = table.querySelector('tbody');
   theadRow.innerHTML = '';
-  tbody.innerHTML   = '';
+  tbody.innerHTML = '';
 
-  if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3">Результатов пока нет</td></tr>';
+  if (!rowsToRender.length) {
+    tbody.innerHTML = '<tr><td colspan="3">Результатів поки немає</td></tr>';
     return;
   }
 
-  // 1) Определяем, есть ли в данных place и score
-  const hasPlace = rows.some(r => r.place != null);
-  const hasScore = rows.some(r => r.score != null);
+  const hasPlace = originalData.some(r => r.place != null);
+  const hasScore = originalData.some(r => r.score != null);
 
-  // 2) Собираем базовые колонки и вставляем place/score перед Chance
-  const headerDefs = [
-    { title: 'Cat.¹',      key: 'category'   },
-    { title: 'Athlete',    key: 'athleteName' },
-    { title: 'Number²',    key: 'number'      },
+  const headers = [
+    { title: 'Cat.¹',    key: 'category'    },
+    { title: 'Athlete',  key: 'athleteName' },
+    { title: 'Number²',  key: 'number'      },
     ...(hasPlace ? [{ title: 'Place³', key: 'place' }] : []),
     ...(hasScore ? [{ title: 'Score⁴', key: 'score' }] : []),
-    { title: 'Chance⁵',    key: 'chance'     },
-    { title: 'Completion⁶',key: 'completion'},
-    { title: 'Time⁷',      key: 'totalTime'  }
+    { title: 'Chance⁵',     key: 'chance'     },
+    { title: 'Completion⁶', key: 'completion' },
+    { title: 'Time⁷',       key: 'totalTime'  }
   ];
+  
+  const allRouteIds = originalData.flatMap(r => Object.keys(r.perRouteTime || {}).map(Number));
+  const routeOrder = Array.from(new Set(allRouteIds)).sort((a, b) => a - b).map(String);
 
-  // 3) Вычисляем порядок трасс по их ID
-  // Собираем все ID из perRouteTime у всех строк
-  const allIds = [];
-  rows.forEach(r => {
-    if (r.perRouteTime) {
-      Object.keys(r.perRouteTime).forEach(id => {
-        allIds.push(parseInt(id, 10));
-      });
-    }
-  });
-  // Уникальный и отсортированный список ID трасс
-  const routeOrder = Array.from(new Set(allIds))
-    .sort((a, b) => a - b)
-    .slice(0, declaredCount)      // на случай, если backend вернул больше
-    .map(id => id.toString());
-
-  const numRoutes = routeOrder.length;
-
-  // 4) Рендер заголовка
-  headerDefs.forEach((h, idx) => {
+  // Рендер заголовків
+  headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h.title;
-    th.onclick = () => sortTable(th, idx);
+    th.onclick = (event) => handleSort(event, h.key, 'field');
     theadRow.appendChild(th);
   });
-  // колонки «1 тр.», «2 тр.» … «N тр.»
-  for (let i = 0; i < numRoutes; i++) {
-    const idx = headerDefs.length + i;
-    const th  = document.createElement('th');
-    th.textContent = `${i + 1} тр.`;  // номер по порядку в routeOrder
-    th.onclick = () => sortTable(th, idx);
+  routeOrder.forEach((id, idx) => {
+    const th = document.createElement('th');
+    th.textContent = `${idx + 1} тр.`;
+    th.onclick = (event) => handleSort(event, id, 'route');
     theadRow.appendChild(th);
-  }
+  });
+  
+  updateSortIndicators();
 
-  // 5) Рендер строк
-  rows.forEach(r => {
+  // Рендер строк
+  rowsToRender.forEach(r => {
     const tr = document.createElement('tr');
-    if (r.completion) tr.setAttribute('data-completed', 'true');
+    if (r.completion) tr.dataset.completed = 'true';
 
-    // статичные колонки
-    headerDefs.forEach(h => {
+    headers.forEach(h => {
       const td = document.createElement('td');
-      if (h.key === 'completion') {
-        td.textContent = r.completion
-          ? new Date(r.completion).toLocaleString()
-          : '';
-      } else {
-        td.textContent = r[h.key] != null ? r[h.key] : '';
-      }
+      // Оновлено: формат дати українською
+      td.textContent = h.key === 'completion'
+        ? (r.completion ? new Date(r.completion).toLocaleString('uk', {dateStyle:'short', timeStyle:'short'}) : '')
+        : (r[h.key] ?? '');
       tr.appendChild(td);
     });
 
-    // динамические времена по трассам согласно routeOrder
     routeOrder.forEach(id => {
       const td = document.createElement('td');
-      td.textContent = (r.perRouteTime && r.perRouteTime[id]) || '';
+      td.textContent = r.perRouteTime?.[id] || '';
       tr.appendChild(td);
     });
 
@@ -139,23 +233,33 @@ function renderTable(data) {
   });
 }
 
-/** Сортировка по столбцу (текст/числа) */
-function sortTable(thElem, colIndex) {
-  const table = thElem.closest('table');
-  const tbody = table.querySelector('tbody');
-  const rows  = Array.from(tbody.rows);
-  const asc   = table.dataset.sortAsc === 'true';
-
-  rows.sort((a, b) => {
-    const aText = a.cells[colIndex]?.innerText || '';
-    const bText = b.cells[colIndex]?.innerText || '';
-    if (!aText && bText) return 1;
-    if (aText && !bText) return -1;
-    return asc
-      ? aText.localeCompare(bText, undefined, { numeric: true })
-      : bText.localeCompare(aText, undefined, { numeric: true });
+/**
+ * Добавляет визуальные индикаторы (стрелки, цифры) к заголовкам.
+ */
+function updateSortIndicators() {
+  const ths = document.querySelectorAll('#resultsTableHeader th');
+  
+  ths.forEach(th => {
+    th.innerHTML = th.innerHTML.replace(/ [▲▼] \d*$/, '');
   });
 
-  rows.forEach(r => tbody.appendChild(r));
-  table.dataset.sortAsc = (!asc).toString();
+  sortCriteria.forEach((criterion, index) => {
+    const header = findHeaderByKey(criterion.key);
+    if (header.th) {
+      const arrow = criterion.dir === 'asc' ? '▲' : '▼';
+      const order = sortCriteria.length > 1 ? ` ${index + 1}` : '';
+      header.th.innerHTML += ` ${arrow}${order}`;
+    }
+  });
+}
+
+function findHeaderByKey(key) {
+    const ths = Array.from(document.querySelectorAll('#resultsTableHeader th'));
+    for (let i = 0; i < ths.length; i++) {
+        const headerText = ths[i].textContent.replace(/ [▲▼] \d*$/, '');
+        if (headerText.toLowerCase().includes(key.substring(0,3))) {
+            return { th: ths[i] };
+        }
+    }
+    return {};
 }
