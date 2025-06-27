@@ -10,20 +10,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const data = await fetchChallengeResults(challengeId);
     
-    // Зберігаємо початкові дані один раз
     originalData = Array.isArray(data.data) ? data.data : [];
     
-    // Перераховуємо місця всередині категорій при завантаженні
     recalculatePlaces(originalData);
 
     updateHeader(data);
     updateStatus(data);
-    renderTable(originalData, data.countRoutes); // Перший рендер з початковими даними
+    renderTable(originalData); // Перший рендер
     renderCategories(data.categories);
   } catch (err) {
     console.error(err);
     const statusEl = document.getElementById('challengeStatus');
-    // Оновлено: повідомлення про помилку українською
     if (statusEl) statusEl.textContent = 'Помилка завантаження даних';
   }
 });
@@ -36,25 +33,18 @@ function updateHeader(data) {
   if (nameLabel) nameLabel.textContent = data.name;
 }
 
-/**
- * ОНОВЛЕНО: Логіка статусу
- */
 function updateStatus(data) {
   const statusEl = document.getElementById('challengeStatus');
   if (!statusEl) return;
   if (data.type === 'CHALLENGE') {
     const done = originalData.filter(r => r.completion).length;
     const max = data.maxParticipants;
-
-    // Якщо кількість завершених дорівнює максимуму, показуємо "Завершено"
     if (max > 0 && done >= max) {
       statusEl.textContent = 'Завершено';
     } else {
       statusEl.textContent = `${done}/${max}`;
     }
-    
   } else {
-    // Для івентів логіка залишається тією ж
     statusEl.textContent = new Date(data.endDate) > new Date()
       ? 'Активний'
       : 'Завершено';
@@ -72,10 +62,6 @@ function renderCategories(categories = []) {
   });
 }
 
-/**
- * Перераховує місця всередині кожної категорії.
- * Ця функція мутує вихідний масив даних.
- */
 function recalculatePlaces(rows) {
   const groups = {};
   rows.forEach(r => {
@@ -88,35 +74,28 @@ function recalculatePlaces(rows) {
   Object.values(groups).forEach(group => {
     group.sort((a, b) => a.place - b.place);
     group.forEach((r, idx) => {
-      r.place = idx + 1; 
+      r.place = idx + 1;
     });
   });
 }
 
-
-// --- Логіка сортування ---
+// --- ОНОВЛЕНА ЛОГІКА СОРТУВАННЯ ---
 
 /**
  * Обробляє клік по заголовку для сортування.
- * @param {MouseEvent} event - Подія кліку.
+ * Клік додає критерій сортування. Повторний клік змінює напрямок.
  * @param {string} key - Ключ поля для сортування (e.g., 'category').
- * @param {string} type - 'field' або 'route' для різних типів колонок.
+ * @param {string} type - 'field' або 'route'.
  */
-function handleSort(event, key, type = 'field') {
-  const isShiftClick = event.shiftKey;
+function handleSort(key, type = 'field') {
   const criterion = { key, dir: 'asc', type };
-
   const existingIndex = sortCriteria.findIndex(c => c.key === key);
 
   if (existingIndex > -1) {
+    // Критерій вже існує, просто змінюємо напрямок
     sortCriteria[existingIndex].dir = sortCriteria[existingIndex].dir === 'asc' ? 'desc' : 'asc';
-    if (!isShiftClick) {
-      sortCriteria = [sortCriteria[existingIndex]];
-    }
   } else {
-    if (!isShiftClick) {
-      sortCriteria = [];
-    }
+    // Новий критерій - додаємо його в кінець списку
     sortCriteria.push(criterion);
   }
 
@@ -124,7 +103,7 @@ function handleSort(event, key, type = 'field') {
 }
 
 /**
- * Применяет текущие критерии сортировки и перерисовывает таблицу.
+ * Застосовує поточні критерії сортування та перемальовує таблицю.
  */
 function applySortAndRender() {
   let dataToSort = [...originalData];
@@ -146,25 +125,21 @@ function applySortAndRender() {
       if (valA == null && valB == null) continue;
 
       const comparison = String(valA).localeCompare(String(valB), undefined, { numeric: true });
-      
       if (comparison !== 0) {
         return criterion.dir === 'asc' ? comparison : -comparison;
       }
     }
-    return 0; 
+    return 0;
   });
-  
-  const countRoutes = originalData.length > 0 ? Math.max(...originalData.map(r => Object.keys(r.perRouteTime || {}).length)) : 0;
-  renderTable(dataToSort, countRoutes);
+
+  renderTable(dataToSort);
 }
 
-
 /**
- * Основна функція рендерингу. Тепер вона просто "рисує" передані дані.
+ * Основна функція рендерингу.
  * @param {Array} rowsToRender - Масив даних для відображення.
- * @param {number} countRoutes - Кількість трас.
  */
-function renderTable(rowsToRender, countRoutes) {
+function renderTable(rowsToRender) {
   const table = document.getElementById('resultsTable');
   const theadRow = document.getElementById('resultsTableHeader');
   const tbody = table.querySelector('tbody');
@@ -189,7 +164,7 @@ function renderTable(rowsToRender, countRoutes) {
     { title: 'Completion⁶', key: 'completion' },
     { title: 'Time⁷',       key: 'totalTime'  }
   ];
-  
+
   const allRouteIds = originalData.flatMap(r => Object.keys(r.perRouteTime || {}).map(Number));
   const routeOrder = Array.from(new Set(allRouteIds)).sort((a, b) => a - b).map(String);
 
@@ -197,28 +172,28 @@ function renderTable(rowsToRender, countRoutes) {
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h.title;
-    th.onclick = (event) => handleSort(event, h.key, 'field');
+    th.onclick = () => handleSort(h.key, 'field');
     theadRow.appendChild(th);
   });
   routeOrder.forEach((id, idx) => {
     const th = document.createElement('th');
     th.textContent = `${idx + 1} тр.`;
-    th.onclick = (event) => handleSort(event, id, 'route');
+    th.onclick = () => handleSort(id, 'route');
     theadRow.appendChild(th);
   });
   
-  updateSortIndicators();
+  // Оновлюємо візуальні індикатори в заголовках
+  updateSortIndicators(headers, routeOrder);
 
-  // Рендер строк
+  // Рендер рядків
   rowsToRender.forEach(r => {
     const tr = document.createElement('tr');
     if (r.completion) tr.dataset.completed = 'true';
 
     headers.forEach(h => {
       const td = document.createElement('td');
-      // Оновлено: формат дати українською
       td.textContent = h.key === 'completion'
-        ? (r.completion ? new Date(r.completion).toLocaleString('uk', {dateStyle:'short', timeStyle:'short'}) : '')
+        ? (r.completion ? new Date(r.completion).toLocaleString('uk', { dateStyle: 'short', timeStyle: 'short' }) : '')
         : (r[h.key] ?? '');
       tr.appendChild(td);
     });
@@ -234,32 +209,37 @@ function renderTable(rowsToRender, countRoutes) {
 }
 
 /**
- * Добавляет визуальные индикаторы (стрелки, цифры) к заголовкам.
+ * ОНОВЛЕНО: Додає візуальні індикатори, знаходячи заголовок по індексу.
+ * @param {Array} headers - Масив-опис основних заголовків.
+ * @param {Array} routeOrder - Масив ID трас.
  */
-function updateSortIndicators() {
-  const ths = document.querySelectorAll('#resultsTableHeader th');
-  
+function updateSortIndicators(headers, routeOrder) {
+  const ths = Array.from(document.querySelectorAll('#resultsTableHeader th'));
+
+  // Спершу очищуємо всі заголовки від старих індикаторів
   ths.forEach(th => {
-    th.innerHTML = th.innerHTML.replace(/ [▲▼] \d*$/, '');
+    th.textContent = th.textContent.replace(/ [▲▼] \d*$/, '').trim();
   });
 
+  // Додаємо нові індикатори на основі sortCriteria
   sortCriteria.forEach((criterion, index) => {
-    const header = findHeaderByKey(criterion.key);
-    if (header.th) {
+    let headerIndex = -1;
+
+    if (criterion.type === 'field') {
+      headerIndex = headers.findIndex(h => h.key === criterion.key);
+    } else { // type === 'route'
+      const routeIndex = routeOrder.findIndex(id => id === criterion.key);
+      if (routeIndex > -1) {
+        headerIndex = headers.length + routeIndex;
+      }
+    }
+
+    // Якщо знайшли відповідний заголовок, додаємо індикатор
+    if (headerIndex > -1 && ths[headerIndex]) {
       const arrow = criterion.dir === 'asc' ? '▲' : '▼';
+      // Показуємо номер рівня сортування, якщо їх більше одного
       const order = sortCriteria.length > 1 ? ` ${index + 1}` : '';
-      header.th.innerHTML += ` ${arrow}${order}`;
+      ths[headerIndex].textContent += ` ${arrow}${order}`;
     }
   });
-}
-
-function findHeaderByKey(key) {
-    const ths = Array.from(document.querySelectorAll('#resultsTableHeader th'));
-    for (let i = 0; i < ths.length; i++) {
-        const headerText = ths[i].textContent.replace(/ [▲▼] \d*$/, '');
-        if (headerText.toLowerCase().includes(key.substring(0,3))) {
-            return { th: ths[i] };
-        }
-    }
-    return {};
 }
