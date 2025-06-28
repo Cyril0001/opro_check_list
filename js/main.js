@@ -4,17 +4,20 @@ import { fetchChallengeResults } from './data.js';
 // --- Global state for data, sorting, and metadata ---
 let originalData = [];
 let sortCriteria = [];      // e.g. [{ key: 'category', dir: 'asc', type: 'field' }]
-let challengeData = {};     // will hold the full response object
-let routeIdMap = [];        // ordered list of all route IDs
+let challengeData = {};     // full response object
+let routeIdMap = [];        // ordered list of route IDs
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const challengeId = 28; // or pull from URL/data-attribute
+  const challengeId = 34; // or pull from URL/data-attribute
   try {
     const data = await fetchChallengeResults(challengeId);
     challengeData = data;
     originalData = Array.isArray(data.data) ? data.data : [];
 
-    recalculatePlaces(originalData);
+    // Calculate official places only when categories are numeric
+    calculateOfficialPlaces(originalData);
+
+    // Initial render
     updateHeader(data);
     updateStatus(data);
     renderTable(originalData);
@@ -22,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.error(err);
     const statusEl = document.getElementById('challengeStatus');
-    if (statusEl) statusEl.textContent = 'Помилка завантаження даних';
+    if (statusEl) statusEl.textContent = 'Произошла ошибка при загрузке данных...';
   }
 });
 
@@ -38,7 +41,9 @@ function updateStatus(data) {
   if (data.type === 'CHALLENGE') {
     const done = originalData.filter(r => r.completion).length;
     const max  = data.maxParticipants;
-    el.textContent = (max > 0 && done >= max) ? 'Завершено' : `${done}/${max}`;
+    el.textContent = (max > 0 && done >= max)
+      ? 'Завершено'
+      : `${done}/${max}`;
   } else {
     el.textContent = new Date(data.endDate) > new Date()
       ? 'Active'
@@ -48,6 +53,7 @@ function updateStatus(data) {
 
 function renderCategories(categories = []) {
   const ul = document.getElementById('categoryList');
+  if (!ul) return;
   ul.innerHTML = '';
   categories.forEach(cat => {
     const li = document.createElement('li');
@@ -57,18 +63,39 @@ function renderCategories(categories = []) {
 }
 
 /**
- * Recalculate "place" inside each category group.
+ * Calculate official places only if categories are numeric values.
+ * Uses backend 'place' when categories are non-numeric.
+ * @param {Array} rows - Array of result objects.
  */
-function recalculatePlaces(rows) {
+function calculateOfficialPlaces(rows) {
+  // Determine if any category strings are pure numbers
+  const numericRows = rows.filter(r => {
+    const n = parseInt(r.category, 10);
+    return !isNaN(n);
+  });
+  // If none are numeric, skip recalculation
+  if (numericRows.length === 0) return;
+
+  // Group by numeric category
   const groups = {};
-  rows.forEach(r => {
-    if (r.place != null) {
-      (groups[r.category] ||= []).push(r);
+  numericRows.forEach(r => {
+    const catNum = parseInt(r.category, 10);
+    if (!isNaN(catNum) && r.score != null) {
+      (groups[catNum] ||= []).push(r);
     }
   });
+
+  // Sort within each group by score then time, then assign new places
   Object.values(groups).forEach(group => {
-    group.sort((a, b) => a.place - b.place)
-         .forEach((r, i) => { r.place = i + 1; });
+    group.sort((a, b) => {
+      if (a.score !== b.score) {
+        return a.score - b.score;
+      }
+      return String(a.totalTime).localeCompare(String(b.totalTime), undefined, { numeric: true });
+    });
+    group.forEach((r, idx) => {
+      r.place = idx + 1;
+    });
   });
 }
 
@@ -76,7 +103,6 @@ function recalculatePlaces(rows) {
 function handleSort(key, type = 'field') {
   const idx = sortCriteria.findIndex(c => c.key === key);
   if (idx > -1) {
-    // toggle direction
     sortCriteria[idx].dir = sortCriteria[idx].dir === 'asc' ? 'desc' : 'asc';
   } else {
     sortCriteria.push({ key, dir: 'asc', type });
@@ -88,12 +114,8 @@ function applySortAndRender() {
   const dataToSort = [...originalData];
   dataToSort.sort((a, b) => {
     for (const c of sortCriteria) {
-      let vA = c.type === 'route'
-               ? a.perRouteTime?.[c.key]
-               : a[c.key];
-      let vB = c.type === 'route'
-               ? b.perRouteTime?.[c.key]
-               : b[c.key];
+      let vA = c.type === 'route' ? a.perRouteTime?.[c.key] : a[c.key];
+      let vB = c.type === 'route' ? b.perRouteTime?.[c.key] : b[c.key];
 
       if (vA == null && vB != null) return 1;
       if (vA != null && vB == null) return -1;
@@ -104,58 +126,58 @@ function applySortAndRender() {
     }
     return 0;
   });
+
+  // Sorting should not override official places
   renderTable(dataToSort);
 }
 
 // --- Table rendering ---
 function renderTable(rows) {
-  const table     = document.getElementById('resultsTable');
-  const theadRow  = document.getElementById('resultsTableHeader');
-  const tbody     = table.querySelector('tbody');
+  const table    = document.getElementById('resultsTable');
+  const theadRow = document.getElementById('resultsTableHeader');
+  const tbody    = table.querySelector('tbody');
   theadRow.innerHTML = '';
   tbody.innerHTML   = '';
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="3">No results yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3">Результатов пока нет</td></tr>';
     return;
   }
 
-  // Build static headers
+  // Build headers
   const hasPlace = originalData.some(r => r.place != null);
   const hasScore = originalData.some(r => r.score != null);
   const headers = [
-    { title: 'Cat.¹',      key: 'category'   },
-    { title: 'Athlete',    key: 'athleteName'},
-    { title: 'Number²',    key: 'number'     },
-    ...(hasPlace ? [{ title: 'Place³',  key: 'place' }]  : []),
-    ...(hasScore ? [{ title: 'Score⁴', key: 'score' }]  : []),
-    // only include Chance if type=CHALLENGE
+    { title: 'Cat.¹',      key: 'category'    },
+    { title: 'Athlete',    key: 'athleteName' },
+    { title: 'Number²',    key: 'number'      },
+    ...(hasPlace ? [{ title: 'Place³',  key: 'place' }] : []),
+    ...(hasScore ? [{ title: 'Score⁴', key: 'score' }] : []),
     ...(challengeData.type === 'CHALLENGE'
       ? [{ title: 'Chance⁵', key: 'chance' }]
       : []),
-    { title: 'Completion⁶', key: 'completion' },
-    { title: 'Time⁷',       key: 'totalTime'  }
+    { title: 'Completion⁶', key: 'completion'  },
+    { title: 'Time⁷',       key: 'totalTime'   }
   ];
 
-  // Determine full set of route IDs and map them to columns
+  // Map route IDs to columns
   const idSet = new Set();
   originalData.forEach(r =>
     Object.keys(r.perRouteTime || {}).forEach(id => idSet.add(Number(id)))
   );
   routeIdMap = Array.from(idSet).sort((a, b) => a - b);
 
-  // Ensure we have as many columns as backend's countRoutes
   const expected = typeof challengeData.countRoutes === 'number'
                    ? challengeData.countRoutes
                    : routeIdMap.length;
   if (routeIdMap.length < expected) {
     const maxId = routeIdMap.length ? Math.max(...routeIdMap) : 0;
     for (let i = routeIdMap.length; i < expected; i++) {
-      routeIdMap.push(maxId + (i - routeIdMap.length) + 1);
+      routeIdMap.push(maxId + i + 1);
     }
   }
 
-  // Render header cells
+  // Render headers
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h.title;
@@ -188,7 +210,7 @@ function renderTable(rows) {
 
     routeIdMap.forEach(id => {
       const td = document.createElement('td');
-      td.textContent = r.perRouteTime?.[id] || '';
+      td.textContent = r.perRouteTime?.[id] || ''; 
       tr.appendChild(td);
     });
 
@@ -197,22 +219,16 @@ function renderTable(rows) {
 }
 
 /**
- * Add sort arrows and (if multi-criteria) numbers to header cells.
+ * Add sort arrows (and order) to header cells.
  */
 function updateSortIndicators(headers, routeOrder) {
   const ths = Array.from(document.querySelectorAll('#resultsTableHeader th'));
-  ths.forEach(th => {
-    th.textContent = th.textContent.replace(/ [▲▼] \d*$/, '').trim();
-  });
+  ths.forEach(th => th.textContent = th.textContent.replace(/ [▲▼] \d*$/, '').trim());
 
   sortCriteria.forEach((c, i) => {
-    let idx = -1;
-    if (c.type === 'field') {
-      idx = headers.findIndex(h => h.key === c.key);
-    } else {
-      const ridx = routeOrder.indexOf(c.key);
-      if (ridx > -1) idx = headers.length + ridx;
-    }
+    const idx = c.type === 'field'
+      ? headers.findIndex(h => h.key === c.key)
+      : headers.length + routeOrder.indexOf(c.key);
     if (idx > -1) {
       const arrow = c.dir === 'asc' ? '▲' : '▼';
       const ord   = sortCriteria.length > 1 ? ` ${i + 1}` : '';
