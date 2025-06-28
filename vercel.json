@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://185.26.96.243:8889/api/:path*"
+      "destination": "https://api.orienteering.pro/api/:path*"
     }
   ]
 }
