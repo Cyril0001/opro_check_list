@@ -1,11 +1,11 @@
 // js/main.js
 import { fetchChallengeResults } from './data.js';
 
-// --- Global state for data, sorting, and metadata ---
+// --- Global state ---
 let originalData = [];
-let sortCriteria = [];      // e.g. [{ key: 'category', dir: 'asc', type: 'field' }]
-let challengeData = {};     // full response object
-let routeIdMap = [];        // ordered list of route IDs
+let sortCriteria = [];
+let challengeData = {};
+let routeIdMap = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const challengeId = 34; // or pull from URL/data-attribute
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     challengeData = data;
     originalData = Array.isArray(data.data) ? data.data : [];
 
-    // Calculate official places only when categories are numeric
+    // Calculate official places if categories are numeric
     calculateOfficialPlaces(originalData);
 
     // Initial render
@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateStatus(data);
     renderTable(originalData);
     renderCategories(data.categories);
+
+    // Wire up export button
+    const btn = document.getElementById('exportBtn');
+    if (btn) btn.addEventListener('click', exportToCSV);
   } catch (err) {
     console.error(err);
     const statusEl = document.getElementById('challengeStatus');
@@ -29,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// --- UI update helpers ---
+// --- UI helpers ---
 function updateHeader(data) {
   document.getElementById('challengeTypeLabel').textContent = `OPRO – ${data.type}`;
   document.getElementById('challengeName').textContent      = data.name;
@@ -41,13 +45,9 @@ function updateStatus(data) {
   if (data.type === 'CHALLENGE') {
     const done = originalData.filter(r => r.completion).length;
     const max  = data.maxParticipants;
-    el.textContent = (max > 0 && done >= max)
-      ? 'Завершено'
-      : `${done}/${max}`;
+    el.textContent = (max > 0 && done >= max) ? 'Завершено' : `${done}/${max}`;
   } else {
-    el.textContent = new Date(data.endDate) > new Date()
-      ? 'Active'
-      : 'Finished';
+    el.textContent = new Date(data.endDate) > new Date() ? 'Active' : 'Finished';
   }
 }
 
@@ -63,43 +63,30 @@ function renderCategories(categories = []) {
 }
 
 /**
- * Calculate official places only if categories are numeric values.
- * Uses backend 'place' when categories are non-numeric.
- * @param {Array} rows - Array of result objects.
+ * Calculate official places only when categories are numeric.
  */
 function calculateOfficialPlaces(rows) {
-  // Determine if any category strings are pure numbers
-  const numericRows = rows.filter(r => {
-    const n = parseInt(r.category, 10);
-    return !isNaN(n);
-  });
-  // If none are numeric, skip recalculation
+  const numericRows = rows.filter(r => !isNaN(parseInt(r.category, 10)));
   if (numericRows.length === 0) return;
 
-  // Group by numeric category
   const groups = {};
   numericRows.forEach(r => {
-    const catNum = parseInt(r.category, 10);
-    if (!isNaN(catNum) && r.score != null) {
-      (groups[catNum] ||= []).push(r);
+    const num = parseInt(r.category, 10);
+    if (r.score != null && !isNaN(num)) {
+      (groups[num] ||= []).push(r);
     }
   });
 
-  // Sort within each group by score then time, then assign new places
   Object.values(groups).forEach(group => {
     group.sort((a, b) => {
-      if (a.score !== b.score) {
-        return a.score - b.score;
-      }
+      if (a.score !== b.score) return a.score - b.score;
       return String(a.totalTime).localeCompare(String(b.totalTime), undefined, { numeric: true });
     });
-    group.forEach((r, idx) => {
-      r.place = idx + 1;
-    });
+    group.forEach((r, idx) => { r.place = idx + 1; });
   });
 }
 
-// --- Sorting logic ---
+// --- Sorting ---
 function handleSort(key, type = 'field') {
   const idx = sortCriteria.findIndex(c => c.key === key);
   if (idx > -1) {
@@ -127,7 +114,7 @@ function applySortAndRender() {
     return 0;
   });
 
-  // Sorting should not override official places
+  // Do not overwrite official places
   renderTable(dataToSort);
 }
 
@@ -144,23 +131,20 @@ function renderTable(rows) {
     return;
   }
 
-  // Build headers
   const hasPlace = originalData.some(r => r.place != null);
   const hasScore = originalData.some(r => r.score != null);
   const headers = [
     { title: 'Cat.¹',      key: 'category'    },
     { title: 'Athlete',    key: 'athleteName' },
     { title: 'Number²',    key: 'number'      },
-    ...(hasPlace ? [{ title: 'Place³',  key: 'place' }] : []),
-    ...(hasScore ? [{ title: 'Score⁴', key: 'score' }] : []),
-    ...(challengeData.type === 'CHALLENGE'
-      ? [{ title: 'Chance⁵', key: 'chance' }]
-      : []),
+    ...(hasPlace ? [{ title: 'Place³',   key: 'place'   }] : []),
+    ...(hasScore ? [{ title: 'Score⁴',   key: 'score'   }] : []),
+    ...(challengeData.type === 'CHALLENGE' ? [{ title: 'Chance⁵', key: 'chance' }] : []),
     { title: 'Completion⁶', key: 'completion'  },
     { title: 'Time⁷',       key: 'totalTime'   }
   ];
 
-  // Map route IDs to columns
+  // Build route columns
   const idSet = new Set();
   originalData.forEach(r =>
     Object.keys(r.perRouteTime || {}).forEach(id => idSet.add(Number(id)))
@@ -168,8 +152,8 @@ function renderTable(rows) {
   routeIdMap = Array.from(idSet).sort((a, b) => a - b);
 
   const expected = typeof challengeData.countRoutes === 'number'
-                   ? challengeData.countRoutes
-                   : routeIdMap.length;
+    ? challengeData.countRoutes
+    : routeIdMap.length;
   if (routeIdMap.length < expected) {
     const maxId = routeIdMap.length ? Math.max(...routeIdMap) : 0;
     for (let i = routeIdMap.length; i < expected; i++) {
@@ -177,7 +161,7 @@ function renderTable(rows) {
     }
   }
 
-  // Render headers
+  // Render header cells
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h.title;
@@ -210,7 +194,7 @@ function renderTable(rows) {
 
     routeIdMap.forEach(id => {
       const td = document.createElement('td');
-      td.textContent = r.perRouteTime?.[id] || ''; 
+      td.textContent = r.perRouteTime?.[id] || '';
       tr.appendChild(td);
     });
 
@@ -218,15 +202,12 @@ function renderTable(rows) {
   });
 }
 
-/**
- * Add sort arrows (and order) to header cells.
- */
 function updateSortIndicators(headers, routeOrder) {
   const ths = Array.from(document.querySelectorAll('#resultsTableHeader th'));
   ths.forEach(th => th.textContent = th.textContent.replace(/ [▲▼] \d*$/, '').trim());
 
   sortCriteria.forEach((c, i) => {
-    const idx = c.type === 'field'
+    let idx = c.type === 'field'
       ? headers.findIndex(h => h.key === c.key)
       : headers.length + routeOrder.indexOf(c.key);
     if (idx > -1) {
@@ -235,4 +216,33 @@ function updateSortIndicators(headers, routeOrder) {
       ths[idx].textContent += ` ${arrow}${ord}`;
     }
   });
+}
+
+/**
+ * Build CSV from table and trigger download.
+ */
+function exportToCSV() {
+  const rows = [];
+  // header
+  const headerCells = Array.from(document.querySelectorAll('#resultsTableHeader th'));
+  rows.push(headerCells.map(th => `"${th.textContent}"`).join(','));
+  // body
+  document.querySelectorAll('#resultsTable tbody tr').forEach(tr => {
+    const cells = Array.from(tr.querySelectorAll('td'));
+    const row = cells.map(td =>
+      `"${td.textContent.replace(/"/g, '""')}"`
+    );
+    rows.push(row.join(','));
+  });
+
+  const blob = new Blob([rows.join("\r\n")], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${challengeData.name.replace(/\s+/g,'_')}_results.csv`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
