@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.error(err);
     const statusEl = document.getElementById('challengeStatus');
-    if (statusEl) statusEl.textContent = 'Произошла ошибка при загрузке данных...';
+    if (statusEl) statusEl.textContent = 'Something went wrong...';
   }
 });
 
