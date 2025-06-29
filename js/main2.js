@@ -45,7 +45,7 @@ function updateStatus(data) {
   if (data.type === 'CHALLENGE') {
     const done = originalData.filter(r => r.completion).length;
     const max  = data.maxParticipants;
-    el.textContent = (max > 0 && done >= max) ? 'Завершено' : `${done}/${max}`;
+    el.textContent = (max > 0 && done >= max) ? 'Finished' : `${done}/${max}`;
   } else {
     el.textContent = new Date(data.endDate) > new Date() ? 'Active' : 'Finished';
   }
