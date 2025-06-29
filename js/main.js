@@ -127,7 +127,7 @@ function renderTable(rows) {
   tbody.innerHTML   = '';
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="3">Результатов пока нет</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3">No results yet</td></tr>';
     return;
   }
 
