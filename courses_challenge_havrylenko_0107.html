@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Havrylenko 0107</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;1,400&display=swap&subset=cyrillic" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: white;
+      color: #444;
+      text-align: center;
+      font-family: 'Roboto Condensed', sans-serif;
+    }
+    .form-wrapper {
+      background-color: #ff6005;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+    .banner {
+      background: #ff6005;
+      padding: 10px 0;
+    }
+    .banner img {
+      width: 400px;
+      display: block;
+      margin: 0 auto;
+    }
+    .title-cover {
+      width: 100%;
+      margin: 0 auto 20px;
+      background-color: white;
+      border: 1px solid #ff6005;
+      padding: 20px 0px 20px 0px;
+    }
+    .label-box, .title-box {
+      text-align: left;
+      padding-left: 30px;
+    }
+    .label-box {
+      width: 55%;
+      padding: 0px 0px 0px 30px;
+      background-color: #ff6005;
+      border: 1px solid #ff6005;
+      color: white;
+      font-family: 'Noto Serif Display', serif;
+      font-size: 20px;
+      font-weight: 400;
+    }
+    .title-box {
+      width: 55%;
+      padding: 0px 0px 0px 30px;
+      border: 1px solid #ff6005;
+      background-color: white;
+      font-family: 'Noto Serif Display', serif;
+      font-size: 32px;
+      font-weight: 400;
+      color: #444;
+    }
+    .link-button {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      background: #fff;
+      color: #000;
+      margin: 12px auto;
+      padding: 14px 20px;
+      width: 70%;
+      max-width: 400px;
+      border-radius: 30px;
+      font-weight: 500;
+      text-decoration: none;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-family: 'Roboto Condensed', sans-serif;
+    }
+    .link-button input[type="checkbox"] {
+      margin-right: 12px;
+      transform: scale(1.4);
+      accent-color: #ff6005;
+    }
+    .profile {
+      margin-top: 40px;
+    }
+    .profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ff6005;
+    }
+    .profile p {
+      margin: 10px 0 0;
+      font-size: 18px;
+      font-family: 'Roboto Condensed', sans-serif;
+      color: white;
+    }
+    .routes-heading {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 20px;
+  color: white;
+  margin: 0 auto 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+}
+  </style>
+</head>
+<body>
+  <div class="form-wrapper">
+    <div class="banner">
+      <img src="https://opro-check-list.vercel.app/images/OrienteeringPRO_AR_OK_logo-white.png" alt="OPRO Challenge banner">
+    </div>
+    <div class="title-cover">
+      <div class="label-box">OPRO Challenge</div>
+      <div class="title-box">Havrylenko #1</div>
+    </div>
+    <div class="routes-heading">AR-трассы челенджа:</div>
+    <div id="routes"></div>
+
+    <div class="profile">
+      <img src="https://opro-check-list.vercel.app/images/Gavrylenko.png" alt="avatar" />
+      <p>Виталий Гавриленко<br>+38(098) 848 8750</p>
+    </div>
+  </div>
+
+  <script>
+    const routes = [
+      { id: 38, title: "1. Локация А", url: "https://orienteering.pro/route/38_Vitaliy" },
+      { id: 39, title: "2. Локация Б", url: "https://orienteering.pro/route/39_Vitaliy" },
+      { id: 40, title: "3. Локация В", url: "https://orienteering.pro/route/40_Vitaliy" },
+      { id: 41, title: "4. Локация Г", url: "https://orienteering.pro/route/41_Vitaliy" },
+      { id: 42, title: "5. Локация Д", url: "https://orienteering.pro/route/42_Vitaliy" },
+      { id: 43, title: "6. Локация Ж", url: "https://orienteering.pro/route/43_Vitaliy" },
+      { id: 44, title: "7. Локация З", url: "https://orienteering.pro/route/44_Vitaliy" },
+      { id: 45, title: "8. Локация Е", url: "https://orienteering.pro/route/45_Vitaliy" },
+      { id: 46, title: "9. Локация К", url: "https://orienteering.pro/route/46_Vitaliy" },
+      { id: 47, title: "10. Локация Л", url: "https://orienteering.pro/route/47_Vitaliy" },
+    ];
+
+    const container = document.getElementById("routes");
+
+    routes.forEach(({ id, title, url }) => {
+      const link = document.createElement("a");
+      link.href = url;
+      link.className = "link-button";
+      link.target = "_blank";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = localStorage.getItem("route_" + id) === "1";
+      checkbox.onchange = () => {
+        localStorage.setItem("route_" + id, checkbox.checked ? "1" : "0");
+      };
+
+      const text = document.createTextNode(title);
+
+      link.appendChild(checkbox);
+      link.appendChild(text);
+      container.appendChild(link);
+    });
+  </script>
+</body>
+</html>
