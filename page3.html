@@ -1,0 +1,127 @@
+<!-- final_Results_challenge_havrylenko_0107.html -->
+<!DOCTYPE html>
+<html lang="ua">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OPRO Challenge Results</title>
+  <link rel="icon" href="https://opro-check-list.vercel.app/images/favicon.ico" type="image/x-icon">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap&subset=cyrillic"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Semi+Condensed:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles/responsive.css"/>
+
+  <style>
+    tr[data-completed="true"] > td {
+      background-color: #eaf7e9 !important;
+    }
+    .subtitle {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <header class="custom-header">
+      <div class="custom-header-container">
+        <div class="custom-logo">
+          <img src="images/logo-new.png" alt="Orienteering Pro Logo" />
+          <h1>
+            <a href="https://www.orienteering.pro" target="_blank" rel="noopener noreferrer">
+              ORIENTEERING.PRO
+            </a>
+          </h1>
+        </div>
+        <div class="header-right-image">
+          <img src="images/OK.png" alt="OK Icon"/>
+        </div>
+      </div>
+    </header>
+
+    <div class="spacer"></div>
+
+    <!-- CONTENT -->
+    <div class="content-block">
+      <div class="title-flex">
+        <div class="title-cover">
+          <div class="label-box" id="challengeTypeLabel">OPRO – …</div>
+          <div class="title-box" id="challengeName">…</div>
+        </div>
+        <div class="title-cover">
+          <div class="label-box">STATUS</div>
+          <div class="title-box" id="challengeStatus"></div>
+        </div>
+      </div>
+
+     <!-- Кнопка завантаження результатів -->
+<div class="export-container">
+  <button id="exportBtn" class="export-link">Download results</button>
+</div>
+
+
+      <div class="table-wrapper">
+        <table id="resultsTable" data-sort-asc="false">
+          <thead>
+            <tr id="resultsTableHeader">
+              <!-- генерируется main.js -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- генерируется main.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="note">
+      <h3 class="note-title">Notes:</h3>
+      <dl class="note-list">
+        <div class="note-item">
+          <dt>¹ Категорії</dt>
+          <dd>
+            <ul class="category-list" id="categoryList">
+              <!-- заполняется main.js -->
+            </ul>
+          </dd>
+        </div>
+        <div class="note-item">
+          <dt>² Номер</dt>
+          <dd>Номер спортсмена для розіграшу призів. Номер присвоюється у порядку завершення.</dd>
+        </div>
+        <div class="note-item">
+          <dt>³ Місце</dt>
+          <dd>Місце спортсмена у його категорії.</dd>
+        </div>
+        <div class="note-item">
+          <dt>⁴ Бали</dt>
+          <dd>За кожну AR-трасу нараховуються бали (1 місце — 1 бал і т. д.). Перемагає той, у кого менша сума балів.</dd>
+        </div>
+        <div class="note-item">
+          <dt>⁵ Шанси</dt>
+          <dd>Бонусні шанси під час розіграшу призів.</dd>
+        </div>
+        <div class="note-item">
+          <dt>⁶ Завершення</dt>
+          <dd>Дата та час завершення.</dd>
+        </div>
+        <div class="note-item">
+          <dt>⁷ Час</dt>
+          <dd>Сумарний чистий час усіх трас.</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <script type="module" src="js/main3.js"></script>
+</body>
+</html>
