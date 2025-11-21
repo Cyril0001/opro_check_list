@@ -8,7 +8,7 @@ let challengeData = {};
 let routeIdMap = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const challengeId = 25; // or pull from URL/data-attribute
+  const challengeId = 28; // or pull from URL/data-attribute
   try {
     const data = await fetchChallengeResults(challengeId);
     challengeData = data;
